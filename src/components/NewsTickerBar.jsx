@@ -1,63 +1,59 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { fetchGeoNews } from '../services/news.js';
 
-const GDELT_ENDPOINT = 'https://api.gdeltproject.org/api/v2/doc/doc';
-const GDELT_QUERIES = {
-  ar: '(geopolitics OR-war OR sanctions OR coalition) sourcelang:english',
-  en: '(geopolitics OR war OR sanctions OR coalition) sourcelang:english',
-};
+const REFRESH_MS = 10 * 60 * 1000;
 
 export default function NewsTickerBar({ tickerItems, lang }) {
   const isAr = lang === 'ar';
   const [items, setItems] = useState(tickerItems);
   const [live, setLive] = useState(false);
+  const [source, setSource] = useState(null);
   const [updatedAt, setUpdatedAt] = useState(null);
   const [paused, setPaused] = useState(false);
+  const [busy, setBusy] = useState(false);
   const trackRef = useRef(null);
+  const abortRef = useRef(null);
 
   const loadLiveFeed = useCallback(async () => {
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    setBusy(true);
     try {
-      const params = new URLSearchParams({
-        query: GDELT_QUERIES[lang] ?? GDELT_QUERIES.en,
-        mode: 'ArtList',
-        format: 'json',
-        maxrecords: '30',
-        sort: 'DateDesc',
-        timespan: '6h',
-      });
-      const res = await fetch(`${GDELT_ENDPOINT}?${params}`, { mode: 'cors' });
-      if (!res.ok) throw new Error(`GDELT ${res.status}`);
-      const json = await res.json();
-      const articles = (json.articles ?? [])
-        .filter((a) => a.title && a.domain)
-        .slice(0, 12)
-        .map((a) => ({
-          key: a.url,
-          text: isAr
-            ? `${a.title} — ${a.domain}`
-            : `${a.title} — ${a.domain}`,
-          href: a.url,
-        }));
-      if (!articles.length) throw new Error('empty feed');
-      setItems(articles);
+      const { items: live, source: src } = await fetchGeoNews(lang, { signal: ac.signal });
+      if (!live.length) throw new Error('empty feed');
+      setItems(live);
+      setSource(src);
       setLive(true);
       setUpdatedAt(new Date());
     } catch {
       setLive(false);
+      setSource(null);
       setUpdatedAt(null);
+    } finally {
+      setBusy(false);
     }
-  }, [lang, isAr]);
+  }, [lang]);
 
   useEffect(() => {
-    const id = setInterval(loadLiveFeed, 10 * 60 * 1000);
     loadLiveFeed();
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang]);
+    const id = setInterval(loadLiveFeed, REFRESH_MS);
+    return () => {
+      clearInterval(id);
+      abortRef.current?.abort();
+    };
+  }, [loadLiveFeed]);
 
   const marqueeItems = items.map((item) =>
     typeof item === 'string' ? { key: item, text: item } : item,
   );
+
+  const sourceLabel = live
+    ? `${source ?? 'live'} · ${updatedAt?.toLocaleTimeString()}`
+    : isAr
+      ? 'مصدر احتياطي'
+      : 'fallback feed';
 
   return (
     <div
@@ -76,10 +72,11 @@ export default function NewsTickerBar({ tickerItems, lang }) {
 
         <button
           onClick={loadLiveFeed}
+          disabled={busy}
           title={isAr ? 'تحديث الآن' : 'Refresh now'}
-          className="grid h-6 w-6 place-items-center rounded-md text-slate-500 transition hover:bg-slate-800 hover:text-sky-300"
+          className="grid h-6 w-6 place-items-center rounded-md text-slate-500 transition hover:bg-slate-800 hover:text-sky-300 disabled:opacity-50"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -102,9 +99,11 @@ export default function NewsTickerBar({ tickerItems, lang }) {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={item.source || item.text}
                       className="px-4 text-[13px] text-slate-300 transition hover:text-sky-300"
                     >
                       {item.text}
+                      {item.source ? <span className="text-slate-500"> · {item.source}</span> : null}
                     </a>
                   ) : (
                     <span className="px-4 text-[13px] text-slate-300">{item.text}</span>
@@ -117,13 +116,7 @@ export default function NewsTickerBar({ tickerItems, lang }) {
         </div>
       </div>
 
-      <span className="hidden shrink-0 text-[11px] text-slate-500 md:inline">
-        {live
-          ? `GDELT · ${updatedAt?.toLocaleTimeString()}`
-          : isAr
-            ? 'مصدر احتياطي'
-            : 'fallback feed'}
-      </span>
+      <span className="hidden shrink-0 text-[11px] text-slate-500 md:inline">{sourceLabel}</span>
     </div>
   );
 }

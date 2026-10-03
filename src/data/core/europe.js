@@ -41,6 +41,6 @@ export const EUROPE = [
   ['se', '🇸🇪', 'السويد', 'Sweden', 'ستوكهولم', 'Stockholm', 59.33, 18.07, 'north-europe', 'Ulf Kristersson', 'pm', 2.1, 'parliamentary', 10.6],
   ['ch', '🇨🇭', 'سويسرا', 'Switzerland', 'برن', 'Bern', 46.95, 7.45, 'west-europe', 'Guy Parmelin', 'president', 0.8, 'federal', 8.8],
   ['ua', '🇺🇦', 'أوكرانيا', 'Ukraine', 'كييف', 'Kyiv', 50.45, 30.52, 'east-europe', 'Volodymyr Zelenskyy', 'president', 64.8, 'republic', 37],
-  ['gb', '🇬🇧', 'المملكة المتحدة', 'United Kingdom', 'لندن', 'London', 51.51, -0.13, 'west-europe', 'Keir Starmer', 'pm', 74.9, 'parliamentary', 68.3],
+  ['gb', '🇬🇧', 'المملكة المتحدة', 'United Kingdom', 'لندن', 'London', 51.51, -0.13, 'west-europe', 'Andy Burnham', 'pm', 74.9, 'parliamentary', 68.3],
   ['va', '🇻🇦', 'الفاتيكان', 'Vatican City', 'الفاتيكان', 'Vatican City', 41.9, 12.45, 'south-europe', 'Pope Leo XIV', 'pope', 0.0, 'theocracy', 0.001],
 ];
