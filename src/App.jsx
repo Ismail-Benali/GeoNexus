@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { geopoliticalData } from './data/geopoliticalData';
 import Navbar from './components/Navbar';
 import NewsTickerBar from './components/NewsTickerBar';
@@ -8,11 +8,11 @@ import CountryDetailModal from './components/CountryDetailModal';
 import SearchModal from './components/SearchModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
-import { Globe, ArrowRight, BookOpen, ShieldAlert, Cpu } from 'lucide-react';
+import { Activity, Globe2, Radio } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
-  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'analytics'
+  const [activeTab, setActiveTab] = useState('map');
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState('all');
@@ -20,22 +20,53 @@ export default function App() {
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
 
-  // Keyboard shortcut Ctrl+K for search
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+    document.title = isAr
+      ? 'GeoNexus 2026 — المنصة الجيوسياسية'
+      : 'GeoNexus 2026 — Geopolitical Intelligence Platform';
+  }, [lang, isAr]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsSearchOpen(prev => !prev);
+        setIsSearchOpen((v) => !v);
       }
+      if (e.key === 'Escape') setIsSearchOpen(false);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const handleSelectCountry = useCallback((country) => {
+    setSelectedCountry((prev) => (prev?.id === country?.id ? null : country));
+  }, []);
+
+  const stats = [
+    {
+      icon: Globe2,
+      label: isAr ? 'الدول المدرجة' : 'Countries tracked',
+      value: data.countries.length,
+      tone: 'text-sky-300',
+    },
+    {
+      icon: Radio,
+      label: isAr ? 'التحالفات النشطة' : 'Active alliances',
+      value: data.alliancesList.length,
+      tone: 'text-indigo-300',
+    },
+    {
+      icon: Activity,
+      label: isAr ? 'قارات مغطاة' : 'Continents covered',
+      value: data.continents.length,
+      tone: 'text-emerald-300',
+    },
+  ];
+
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white`} dir={isAr ? 'rtl' : 'ltr'}>
-      
-      {/* Navbar */}
+    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <Navbar
         lang={lang}
         setLang={setLang}
@@ -44,86 +75,107 @@ export default function App() {
         setActiveTab={setActiveTab}
       />
 
-      {/* Live News Ticker */}
       <NewsTickerBar tickerItems={data.newsTicker} lang={lang} />
 
-      {/* Main Dashboard Layout */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6 space-y-6">
-        
-        {/* Header Hero Section */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="space-y-3 z-10 text-right md:text-start" style={{ textAlign: isAr ? 'right' : 'left' }}>
-            <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-bold">
-              <Cpu className="w-3.5 h-3.5" />
-              <span>{isAr ? 'لوحة القيادة الجيوسياسية الاستخباراتية (2026)' : 'Tactical Geopolitical Command Dashboard (2026)'}</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight m-0">
-              {data.title}
-            </h2>
-            <p className="text-slate-400 text-sm md:text-base max-w-2xl m-0">
-              {data.subtitle}
-            </p>
-          </div>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-3 py-4 sm:px-4 sm:py-6">
+        {/* Hero */}
+        <section className="nx-grid-lines nx-panel relative mb-5 overflow-hidden">
+          <div className="pointer-events-none absolute -end-24 -top-24 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
+          <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-7">
+            <div className="max-w-2xl">
+              <span className="nx-chip mb-3 border border-sky-500/25 bg-sky-500/10 text-sky-300">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-sky-400" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-400" />
+                </span>
+                {isAr ? 'تحديث آلي من GDELT كل 10 دقائق' : 'Auto-synced from GDELT every 10 min'}
+              </span>
 
-          <div className="flex flex-wrap gap-3 z-10">
-            {data.continents.map(cont => (
-              <div key={cont.id} className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-xl text-center shadow-md">
-                <span className="block text-xs text-slate-400">{cont.name}</span>
-                <span className="block text-lg font-bold text-white">{cont.countriesCount} {isAr ? 'دولة' : 'States'}</span>
+              <h1 className="font-display m-0 text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
+                {data.title}
+              </h1>
+              <p className="m-0 mt-2 text-sm leading-relaxed text-slate-400">{data.subtitle}</p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {stats.map(({ icon: Icon, label, value, tone }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
+                  >
+                    <Icon className={`h-4 w-4 ${tone}`} />
+                    <span className="text-[11px] text-slate-500">{label}</span>
+                    <span className="font-display text-sm font-black text-white">{value}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Dashboard 12-Column Grid View */}
+            {/* Continent grid */}
+            <div className="grid shrink-0 grid-cols-3 gap-2 lg:w-80">
+              {data.continents.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    setSelectedContinent(c.id);
+                    setActiveTab('map');
+                  }}
+                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-2 py-2.5 text-center transition hover:border-sky-500/40 hover:bg-slate-900"
+                >
+                  <span className="block text-[11px] text-slate-400">{c.name}</span>
+                  <span className="font-display block text-base font-black text-white">
+                    {c.countriesCount}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Views */}
         {activeTab === 'map' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* Left Sidebar: Country & Continent Selector (3 cols) */}
-            <div className="lg:col-span-3">
+          <div className="grid gap-4 xl:grid-cols-12">
+            <div className="xl:col-span-3">
               <DashboardSidebar
                 data={data}
                 lang={lang}
-                onSelectCountry={setSelectedCountry}
+                onSelectCountry={handleSelectCountry}
                 selectedContinent={selectedContinent}
                 setSelectedContinent={setSelectedContinent}
+                activeCountryId={selectedCountry?.id}
               />
             </div>
 
-            {/* Central Map Area (6 cols) */}
-            <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-center justify-between bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2 m-0">
-                  <Globe className="w-4 h-4 text-blue-400" />
-                  <span>{isAr ? 'خريطة العمليات الجيوسياسية الحية (OpenStreetMap)' : 'Live Geopolitical Operations Map'}</span>
-                </h3>
-                <span className="text-xs text-slate-400">
-                  {isAr ? 'انقر على أي دولة لعرض الملف' : 'Click any country for profile'}
-                </span>
-              </div>
-              <MapComponent data={data} lang={lang} onSelectCountry={setSelectedCountry} />
+            <div className="space-y-4 xl:col-span-6">
+              <MapComponent
+                data={data}
+                lang={lang}
+                onSelectCountry={handleSelectCountry}
+                onClearSelection={() => setSelectedCountry(null)}
+                focusCountry={selectedCountry}
+              />
             </div>
 
-            {/* Right Sidebar: Intelligence Briefing (3 cols) */}
-            <div className="lg:col-span-3">
-              <IntelligenceBriefing lang={lang} />
+            <div className="xl:col-span-3">
+              <IntelligenceBriefing lang={lang} countries={data.countries} />
             </div>
-
           </div>
         ) : (
-          <AnalyticsPanel data={data} lang={lang} onSelectCountry={setSelectedCountry} />
+          <AnalyticsPanel data={data} lang={lang} onSelectCountry={handleSelectCountry} />
         )}
-
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
-        <p>GeoNexus Command Dashboard 2026 &copy; All Global Geopolitical & Intelligence Rights Reserved.</p>
-        <p className="mt-1 text-slate-600">OpenStreetMap integration • Real-time GDELT/RSS synchronization • Bilingual AR/EN</p>
+      <footer className="mt-8 border-t border-slate-800 bg-slate-950/60 px-4 py-5 text-center">
+        <p className="m-0 text-xs font-semibold text-slate-400">
+          GeoNexus 2026 — {isAr ? 'منصة تحليل جيوسياسي' : 'Geopolitical Intelligence Platform'}
+        </p>
+        <p className="m-0 mt-1 text-[11px] text-slate-600">
+          {isAr
+            ? 'البيانات للاستخدام التحليلي العام — تحقّق من المصادر الرسمية قبل Citations.'
+            : 'Data for public analysis — verify against official sources before citing.'}{' '}
+          OpenStreetMap · CARTO · GDELT
+        </p>
       </footer>
 
-      {/* Country Detail Modal */}
       {selectedCountry && (
         <CountryDetailModal
           country={selectedCountry}
@@ -132,16 +184,17 @@ export default function App() {
         />
       )}
 
-      {/* Advanced Search Modal */}
       {isSearchOpen && (
         <SearchModal
           data={data}
           lang={lang}
           onClose={() => setIsSearchOpen(false)}
-          onSelectCountry={setSelectedCountry}
+          onSelectCountry={(c) => {
+            handleSelectCountry(c);
+            setIsSearchOpen(false);
+          }}
         />
       )}
-
     </div>
   );
 }

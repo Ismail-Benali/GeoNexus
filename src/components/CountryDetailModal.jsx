@@ -1,126 +1,297 @@
-import React from 'react';
-import { X, Shield, Building2, Users, Landmark, AlertTriangle, TrendingUp, History, Award } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  X,
+  Shield,
+  Building2,
+  Landmark,
+  History,
+  Users,
+  AlertTriangle,
+  Coins,
+  Network,
+} from 'lucide-react';
+
+const TABS = [
+  { id: 'overview', icon: Landmark },
+  { id: 'military', icon: Shield },
+  { id: 'economy', icon: Building2 },
+  { id: 'risk', icon: AlertTriangle },
+  { id: 'history', icon: History },
+];
 
 export default function CountryDetailModal({ country, lang, onClose }) {
-  if (!country) return null;
+  const [tabState, setTabState] = useState({ countryId: null, tab: 'overview' });
   const isAr = lang === 'ar';
 
+  const tab = tabState.countryId === country?.id ? tabState.tab : 'overview';
+  const setTab = (next) => setTabState({ countryId: country?.id ?? null, tab: next });
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  if (!country) return null;
+
+  const labels = {
+    overview: isAr ? 'النبذة' : 'Overview',
+    military: isAr ? 'الجيش' : 'Military',
+    economy: isAr ? 'الاقتصاد' : 'Economy',
+    risk: isAr ? 'المخاطر' : 'Risk',
+    history: isAr ? 'التاريخ' : 'History',
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden text-slate-100 max-h-[90vh] flex flex-col">
-        
-        {/* Modal Header */}
-        <div className="bg-slate-800 px-6 py-4 border-b border-slate-700 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">{country.flag}</span>
-            <div>
-              <h2 className="text-2xl font-black text-white m-0 flex items-center gap-2">
-                {country.name}
-              </h2>
-              <p className="text-sm text-slate-400 m-0">
-                {isAr ? `العاصمة: ${country.capital}` : `Capital: ${country.capital}`}
-              </p>
+    <div
+      className="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="animate-fade-up nx-panel my-4 w-full max-w-4xl overflow-hidden !rounded-2xl"
+      >
+        {/* Header */}
+        <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-l from-slate-900 via-slate-900 to-sky-950/60 px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950/70 text-3xl">
+                {country.flag}
+              </span>
+              <div>
+                <h2 className="font-display m-0 text-xl font-black text-white sm:text-2xl">
+                  {country.name}
+                </h2>
+                <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                  <span>
+                    {isAr ? 'العاصمة' : 'Capital'}: <b className="text-slate-200">{country.capital}</b>
+                  </span>
+                  <span className="h-1 w-1 rounded-full bg-slate-600" />
+                  <span>{country.leader}</span>
+                </p>
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              aria-label={isAr ? 'إغلاق' : 'Close'}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-700 bg-slate-900/70 text-slate-400 transition hover:border-rose-500/50 hover:text-rose-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="bg-slate-700 hover:bg-slate-600 p-2 rounded-xl text-slate-300 hover:text-white transition"
-          >
-            <X className="w-6 h-6" />
-          </button>
+
+          {/* Alliances */}
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <Network className="h-3.5 w-3.5 text-sky-400" />
+            {country.alliances.map((a) => (
+              <span
+                key={a}
+                className="nx-chip border border-sky-500/25 bg-sky-500/10 text-sky-200"
+              >
+                {a}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
-          
-          {/* Leadership & Political Structure */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-              <div className="flex items-center gap-2 text-blue-400 font-bold mb-2">
-                <Users className="w-5 h-5" />
-                <span>{isAr ? 'القيادة والأحزاب السياسية' : 'Leadership & Political Parties'}</span>
-              </div>
-              <p className="text-sm text-slate-300 mb-1">
-                <strong>{isAr ? 'القائد / الرئيس:' : 'Leader:'}</strong> {country.leader}
-              </p>
-              <p className="text-sm text-slate-300 mb-1">
-                <strong>{isAr ? 'الحزب الحاكم:' : 'Ruling Party:'}</strong> {country.rulingParty}
-              </p>
-              <div className="mt-2 text-xs text-slate-400">
-                <strong>{isAr ? 'الأحزاب الرئيسية:' : 'Key Parties:'}</strong> {country.parties.join(', ')}
-              </div>
-            </div>
+        {/* Tabs */}
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950/40 px-3 py-2">
+          {TABS.map(({ id, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                tab === id
+                  ? 'bg-sky-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {labels[id]}
+            </button>
+          ))}
+        </div>
 
-            <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-              <div className="flex items-center gap-2 text-red-400 font-bold mb-2">
-                <Shield className="w-5 h-5" />
-                <span>{isAr ? 'الجيش والتحالفات الاستراتيجية' : 'Military & Alliances'}</span>
-              </div>
-              <p className="text-sm text-slate-300 mb-1">
-                <strong>{isAr ? 'ميزانية الجيش:' : 'Military Budget:'}</strong> {country.militaryBudget}
-              </p>
-              <p className="text-sm text-slate-300 mb-1">
-                <strong>{isAr ? 'قائد الجيش / الأركان:' : 'Military Chief:'}</strong> {country.militaryLeader}
-              </p>
-              <div className="mt-2 text-xs text-slate-300 flex flex-wrap gap-1">
-                {country.alliances.map((all, i) => (
-                  <span key={i} className="bg-blue-600/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-md">
-                    {all}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Body */}
+        <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 sm:p-5">
+          {tab === 'overview' && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Card title={isAr ? 'القيادة السياسية' : 'Political Leadership'} icon={Users} tone="sky">
+                <Row label={isAr ? 'رئيس الدولة' : 'Head of State'} value={country.leader} />
+                <Row label={isAr ? 'الحزب الحاكم' : 'Ruling Party'} value={country.rulingParty} />
+              </Card>
 
-          {/* Corporations & Investments */}
-          <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold mb-3">
-              <Building2 className="w-5 h-5" />
-              <span>{isAr ? 'الشركات الكبرى، الاستثمارات ومؤشرات الضغط' : 'Top Corporations, Investments & Pressure Points'}</span>
+              <Card title={isAr ? 'الأحزاب السياسية' : 'Political Parties'} icon={Landmark} tone="indigo">
+                <ul className="space-y-1.5">
+                  {country.parties.map((p) => (
+                    <li
+                      key={p}
+                      className="rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1.5 text-xs text-slate-300"
+                    >
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+
+              <Card title={isAr ? 'القدرات الدفاعية' : 'Defense Capabilities'} icon={Shield} tone="rose">
+                <Row label={isAr ? 'ميزانية الجيش' : 'Military Budget'} value={country.militaryBudget} />
+                <Row label={isAr ? 'قادة الجيش' : 'Military Chief'} value={country.militaryLeader} />
+              </Card>
+
+              <Card title={isAr ? 'الموقع والحضور' : 'Position & Reach'} icon={Coins} tone="emerald">
+                <Row label={isAr ? 'القارة' : 'Continent'} value={country.continent.toUpperCase()} />
+                <Row
+                  label={isAr ? 'التحالفات' : 'Alliances'}
+                  value={`${country.alliances.length} ${isAr ? 'تحالف' : 'alliances'}`}
+                />
+              </Card>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          )}
+
+          {tab === 'military' && (
+            <div className="space-y-3">
+              <Card title={isAr ? 'القيادة العسكرية' : 'Command Structure'} icon={Shield} tone="rose">
+                <Row label={isAr ? 'قائد الأركان' : 'Chief of Staff'} value={country.militaryLeader} />
+                <Row label={isAr ? 'ميزانية الدفاع' : 'Defense Budget'} value={country.militaryBudget} />
+                <Row label={isAr ? 'الحلف الدفاعي' : 'Defense Pact'} value={country.alliances[0]} />
+              </Card>
+              <Card title={isAr ? 'التحالفات الاستراتيجية' : 'Strategic Alliances'} icon={Network} tone="sky">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {country.alliances.map((a) => (
+                    <div
+                      key={a}
+                      className="rounded-lg border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs font-semibold text-sky-200"
+                    >
+                      {a}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {tab === 'economy' && (
+            <div className="grid gap-3 sm:grid-cols-2">
               {country.topCompanies.map((comp, idx) => (
-                <div key={idx} className="bg-slate-900/80 p-3 rounded-lg border border-slate-700">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-white text-sm">{comp.name}</span>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">{comp.sector}</span>
+                <div
+                  key={`${comp.name}-${idx}`}
+                  className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 transition hover:border-emerald-500/30"
+                >
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <h4 className="m-0 text-sm font-bold text-white">{comp.name}</h4>
+                    <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+                      {comp.sector}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-300 mb-1"><strong>{isAr ? 'الاستثمار/التقييم:' : 'Investment:'}</strong> {comp.investment}</p>
-                  <p className="text-xs text-slate-400"><strong>{isAr ? 'نقاط الضغط والتاثير:' : 'Pressure Impact:'}</strong> {comp.pressure}</p>
+                  <p className="m-0 mb-1 text-[11px] text-slate-400">
+                    <b className="text-slate-200">{isAr ? 'الاستثمار' : 'Investment'}:</b>{' '}
+                    {comp.investment}
+                  </p>
+                  <p className="m-0 text-[11px] text-slate-400">
+                    <b className="text-slate-200">{isAr ? 'نقاط الضغط' : 'Pressure'}:</b>{' '}
+                    {comp.pressure}
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Corruption, Money Laundering, Human Trafficking & Terrorism */}
-          <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center gap-2 text-amber-400 font-bold mb-3">
-              <AlertTriangle className="w-5 h-5" />
-              <span>{isAr ? 'غسيل الأموال، الاتجار بالبشر ومؤشرات المخاطر الأمنية' : 'Money Laundering, Human Trafficking & Security Risks'}</span>
+          {tab === 'risk' && (
+            <div className="space-y-2.5">
+              <RiskRow
+                tone="amber"
+                title={isAr ? 'غسيل الأموال' : 'Money Laundering'}
+                value={country.corruptionLaundering.moneyLaunderingRisk}
+              />
+              <RiskRow
+                tone="violet"
+                title={isAr ? 'الاتجار بالبشر' : 'Human Trafficking'}
+                value={country.corruptionLaundering.humanTrafficking}
+              />
+              <RiskRow
+                tone="rose"
+                title={isAr ? 'التهديدات الإرهابية' : 'Terrorism Threats'}
+                value={country.corruptionLaundering.terrorismThreat}
+              />
+              <p className="m-0 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/80">
+                {isAr
+                  ? 'تنبيه: هذه مؤشرات مستخلصة من مصادر مفتوحة وتقديرات، وليست أحكاماً قضائية. راجع التقارير الرسمية قبل الاستشهاد.'
+                  : 'Note: indicators are compiled from open-source estimates, not legal findings. Verify with official reports before citing.'}
+              </p>
             </div>
-            <div className="space-y-2 text-sm text-slate-300">
-              <p><strong>{isAr ? 'مخاطر غسيل الأموال:' : 'Money Laundering Risk:'}</strong> {country.corruptionLaundering.moneyLaunderingRisk}</p>
-              <p><strong>{isAr ? 'الاتجار بالبشر والعمل القسري:' : 'Human Trafficking:'}</strong> {country.corruptionLaundering.humanTrafficking}</p>
-              <p><strong>{isAr ? 'التهديدات الإرهابية والأمنية:' : 'Terrorism & Security Threats:'}</strong> {country.corruptionLaundering.terrorismThreat}</p>
-            </div>
-          </div>
+          )}
 
-          {/* Historical Events */}
-          <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center gap-2 text-indigo-400 font-bold mb-3">
-              <History className="w-5 h-5" />
-              <span>{isAr ? 'أهم الاحداث والوقائع التاريخية (حتى 2026)' : 'Key Historical Events & Facts (up to 2026)'}</span>
-            </div>
-            <ul className="list-disc list-inside space-y-1.5 text-sm text-slate-300">
+          {tab === 'history' && (
+            <ol className="relative space-y-3 border-s-2 border-slate-800 ps-5">
               {country.historicalEvents.map((event, i) => (
-                <li key={i}>{event}</li>
+                <li key={i} className="relative">
+                  <span className="absolute -start-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-500 ring-4 ring-slate-950" />
+                  <p className="m-0 text-[13px] leading-relaxed text-slate-300">{event}</p>
+                </li>
               ))}
-            </ul>
-          </div>
-
+            </ol>
+          )}
         </div>
-
       </div>
+    </div>
+  );
+}
+
+const TONES = {
+  sky: 'text-sky-300',
+  indigo: 'text-indigo-300',
+  rose: 'text-rose-300',
+  emerald: 'text-emerald-300',
+  amber: 'text-amber-300',
+  violet: 'text-violet-300',
+};
+
+function Card({ title, icon: Icon, tone = 'sky', children }) {
+  return (
+    <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+      <h3
+        className={`m-0 mb-2.5 flex items-center gap-2 text-sm font-bold ${TONES[tone] ?? TONES.sky}`}
+      >
+        <Icon className="h-4 w-4" />
+        {title}
+      </h3>
+      <div className="space-y-1.5">{children}</div>
+    </section>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-3 text-xs">
+      <span className="shrink-0 text-slate-500">{label}</span>
+      <span className="text-end font-semibold text-slate-200">{value}</span>
+    </div>
+  );
+}
+
+function RiskRow({ tone = 'amber', title, value }) {
+  return (
+    <div
+      className={`rounded-xl border p-3.5 ${
+        {
+          amber: 'border-amber-500/25 bg-amber-500/5',
+          violet: 'border-violet-500/25 bg-violet-500/5',
+          rose: 'border-rose-500/25 bg-rose-500/5',
+        }[tone]
+      }`}
+    >
+      <h4 className={`m-0 mb-1 flex items-center gap-2 text-sm font-bold ${TONES[tone]}`}>
+        <AlertTriangle className="h-4 w-4" />
+        {title}
+      </h4>
+      <p className="m-0 text-xs leading-relaxed text-slate-300">{value}</p>
     </div>
   );
 }

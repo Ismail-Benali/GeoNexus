@@ -1,65 +1,76 @@
-import React from 'react';
-import { Globe, Search, ShieldAlert, Languages, BarChart2 } from 'lucide-react';
+import { Globe, Search, Languages, BarChart3 } from 'lucide-react';
 
 export default function Navbar({ lang, setLang, onOpenSearch, activeTab, setActiveTab }) {
   const isAr = lang === 'ar';
 
-  return (
-    <header className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Logo & Title */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('map')}>
-          <div className="bg-blue-600 p-2 rounded-xl text-white shadow-md flex items-center justify-center">
-            <Globe className="w-7 h-7 animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent m-0">
-              GeoNexus <span className="text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/40">2026</span>
-            </h1>
-            <p className="text-xs text-slate-400 m-0">
-              {isAr ? 'المنصة الجيوسياسية والاستخباراتية الشاملة' : 'Global Geopolitical & Intelligence Platform'}
-            </p>
-          </div>
-        </div>
+  const tabs = [
+    { id: 'map', label: isAr ? 'الخريطة الحية' : 'Live Map', icon: Globe },
+    { id: 'analytics', label: isAr ? 'التحليلات' : 'Analytics', icon: BarChart3 },
+  ];
 
-        {/* Navigation Tabs */}
-        <nav className="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
-          <button
-            onClick={() => setActiveTab('map')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-              activeTab === 'map' ? 'bg-blue-600 text-white shadow' : 'text-slate-300 hover:text-white hover:bg-slate-700'
-            }`}
-          >
-            {isAr ? '🗺️ الخريطة التفاعلية' : '🗺️ Interactive Map'}
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
-              activeTab === 'analytics' ? 'bg-blue-600 text-white shadow' : 'text-slate-300 hover:text-white hover:bg-slate-700'
-            }`}
-          >
-            <BarChart2 className="w-4 h-4" />
-            {isAr ? '📊 التحليلات والجيوش' : '📊 Analytics & Militaries'}
-          </button>
+  return (
+    <header className="sticky top-0 z-[900] border-b border-slate-800 bg-slate-950/85 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3">
+        {/* Brand */}
+        <button
+          onClick={() => setActiveTab('map')}
+          className="group flex items-center gap-3 text-start"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg shadow-sky-500/20 transition group-hover:scale-105">
+            <Globe className="h-5 w-5" />
+          </span>
+          <span className="leading-tight">
+            <span className="flex items-center gap-2">
+              <span className="font-display text-xl font-black tracking-tight text-white">GeoNexus</span>
+              <span className="nx-chip border border-sky-500/30 bg-sky-500/10 text-sky-300">2026</span>
+            </span>
+            <span className="block text-[11px] text-slate-400">
+              {isAr ? 'المنصة الجيوسياسية الاستخباراتية' : 'Geopolitical Intelligence Platform'}
+            </span>
+          </span>
+        </button>
+
+        {/* Tabs */}
+        <nav className="order-3 flex w-full items-center gap-1 rounded-xl border border-slate-800 bg-slate-900/80 p-1 sm:order-none sm:w-auto">
+          {tabs.map(({ id, label, icon: Icon }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                aria-current={active ? 'page' : undefined}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition sm:flex-none ${
+                  active
+                    ? 'bg-sky-600 text-white shadow shadow-sky-600/25'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Actions (Search & Lang) */}
-        <div className="flex items-center gap-3">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl border border-slate-700 text-sm transition shadow-inner"
+            className="group flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2 text-sm text-slate-300 transition hover:border-sky-500/40 hover:text-white"
           >
-            <Search className="w-4 h-4 text-blue-400" />
-            <span>{isAr ? 'بحث متقدم...' : 'Advanced Search...'}</span>
-            <kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-xs text-slate-400 border border-slate-700">Ctrl+K</kbd>
+            <Search className="h-4 w-4 text-sky-400" />
+            <span className="hidden sm:inline">{isAr ? 'بحث' : 'Search'}</span>
+            <kbd className="hidden rounded border border-slate-700 bg-slate-950 px-1.5 py-0.5 text-[10px] text-slate-500 md:inline">
+              Ctrl K
+            </kbd>
           </button>
 
           <button
             onClick={() => setLang(isAr ? 'en' : 'ar')}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl text-sm font-medium transition shadow-md"
+            className="flex items-center gap-1.5 rounded-xl bg-slate-900/80 px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-slate-800 transition hover:ring-sky-500/40"
           >
-            <Languages className="w-4 h-4" />
-            <span>{isAr ? 'English' : 'العربية'}</span>
+            <Languages className="h-4 w-4 text-indigo-300" />
+            {isAr ? 'EN' : 'ع'}
           </button>
         </div>
       </div>

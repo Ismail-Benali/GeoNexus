@@ -1,15 +1,38 @@
 @import "tailwindcss";
 
+/* ============================================================
+   GeoNexus 2026 — Design System
+   ============================================================ */
+
 :root {
   color-scheme: dark;
+
+  --nx-bg: #020617;
+  --nx-surface: #0b1220;
+  --nx-surface-2: #0f172a;
+  --nx-border: #1e293b;
+  --nx-accent: #38bdf8;
+
+  --nx-font-sans: "Inter", "Cairo", "Tajawal", system-ui, sans-serif;
+  --nx-font-display: "Cairo", "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  background-color: #020617;
-  color: #f8fafc;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  direction: inherit;
+  min-height: 100vh;
+  background-color: var(--nx-bg);
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgba(56, 189, 248, 0.09), transparent 60%),
+    radial-gradient(700px 400px at 10% 0%, rgba(99, 102, 241, 0.08), transparent 60%);
+  background-attachment: fixed;
+  color: #e2e8f0;
+  font-family: var(--nx-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -17,32 +40,195 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
-/* Custom scrollbar for tactical dashboard look */
+.font-display,
+.font-display * {
+  font-family: var(--nx-font-display);
+}
+
+[dir="rtl"] .font-display,
+[dir="rtl"] .font-display * {
+  font-family: var(--nx-font-display);
+}
+
+[dir="rtl"] .animate-marquee {
+  animation-direction: reverse;
+}
+
+/* ---------- Scrollbars ---------- */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: #020617;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
-  border-radius: 3px;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+/* ---------- Reusable surfaces ---------- */
+.nx-panel {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(11, 18, 32, 0.92));
+  border: 1px solid var(--nx-border);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+}
+
+.nx-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--nx-border);
+}
+
+.nx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.nx-grid-lines {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.045) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+/* ---------- Animations ---------- */
+@keyframes nx-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 35s linear infinite;
+  animation: nx-marquee 40s linear infinite;
+}
+
+@keyframes nx-pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: nx-pulse-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes nx-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: nx-fade-up 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-pulse-ring,
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
+/* ---------- Leaflet dark-theme overrides ---------- */
+.leaflet-container {
+  background: #0b1220;
+  font-family: var(--nx-font-sans);
+  z-index: 0;
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #cbd5e1 !important;
+  border-color: #1e293b !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid #1e293b;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.8);
+  border-radius: 0.875rem;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.875rem;
+}
+
+.leaflet-popup-content {
+  margin: 0.875rem 1rem;
+  line-height: 1.6;
+}
+
+.leaflet-popup-close-button {
+  color: #64748b !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #f8fafc !important;
+}
+
+.nx-marker {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.65);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.08);
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.nx-marker:hover {
+  transform: scale(1.15);
+  background: rgba(56, 189, 248, 0.32);
 }

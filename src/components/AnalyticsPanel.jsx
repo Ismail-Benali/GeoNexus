@@ -1,73 +1,75 @@
-import React from 'react';
-import { Shield, Users, TrendingUp, Building2 } from 'lucide-react';
+import { Users, Shield, Building2, ArrowUpLeft } from 'lucide-react';
 
 export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
   const isAr = lang === 'ar';
 
   return (
-    <div className="space-y-6 text-slate-100 text-right" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-      
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-900 to-slate-900 border border-blue-500/30 p-6 rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-black text-white mb-2">
-          {isAr ? '📊 لوحة التحليلات الجيوسياسية والاستخباراتية (2026)' : '📊 Geopolitical & Intelligence Analytics Dashboard (2026)'}
+    <div className="space-y-5">
+      {/* Alliances */}
+      <section>
+        <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
+          <Users className="h-4 w-4 text-sky-400" />
+          {isAr ? 'التحالفات الاستراتيجية الكبرى' : 'Major strategic alliances'}
         </h2>
-        <p className="text-slate-300 text-sm">
-          {isAr
-            ? 'نظرة شاملة ومقارنة لميزانيات الجيوش، التحالفات الاستراتيجية الكبرى، ومؤشرات النفوذ الاقتصادي والشركات العابرة للقارات.'
-            : 'Comprehensive comparison of military budgets, major strategic alliances, and economic influence of global corporations.'}
-        </p>
-      </div>
-
-      {/* Alliances Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {data.alliancesList.map((alliance, idx) => (
-          <div key={idx} className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
-            <div className="flex items-center gap-2 text-blue-400 font-bold mb-2">
-              <Users className="w-5 h-5" />
-              <h3 className="text-lg text-white m-0">{alliance.name}</h3>
-            </div>
-            <p className="text-xs text-slate-400 mb-3"><strong>{isAr ? 'التركيز:' : 'Focus:'}</strong> {alliance.focus}</p>
-            <div className="text-xs text-slate-300">
-              <strong>{isAr ? 'الأعضاء الرئيسيون:' : 'Key Members:'}</strong> {alliance.members.join(', ')}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Countries Quick Cards */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Shield className="w-5 h-5 text-indigo-400" />
-          <span>{isAr ? 'مقارنة ميزانيات الجيوش والقيادات' : 'Military Budgets & Command Comparison'}</span>
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.countries.map(country => (
-            <div
-              key={country.id}
-              onClick={() => onSelectCountry(country)}
-              className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 p-4 rounded-xl cursor-pointer transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">{country.flag}</span>
-                  <span className="text-xs bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-bold">
-                    {country.militaryBudget}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {data.alliancesList.map((a) => (
+            <article key={a.name} className="nx-panel p-4">
+              <h3 className="font-display m-0 text-sm font-bold text-white">{a.name}</h3>
+              <p className="m-0 mt-1 text-[11px] text-sky-300">{a.focus}</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {a.members.map((m) => (
+                  <span
+                    key={m}
+                    className="nx-chip border border-slate-700 bg-slate-900 text-slate-300"
+                  >
+                    {m}
                   </span>
-                </div>
-                <h4 className="font-bold text-white text-base mb-1">{country.name}</h4>
-                <p className="text-xs text-slate-400 mb-2"><strong>{isAr ? 'قائد الجيش:' : 'Mil. Chief:'}</strong> {country.militaryLeader}</p>
+                ))}
               </div>
-              <div className="text-xs text-blue-400 font-semibold mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between">
-                <span>{isAr ? 'استعراض البيانات الكاملة' : 'View Full Data'}</span>
-                <span>→</span>
-              </div>
-            </div>
+            </article>
           ))}
         </div>
-      </div>
+      </section>
 
+      {/* Country comparison */}
+      <section>
+        <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
+          <Shield className="h-4 w-4 text-rose-400" />
+          {isAr ? 'مقارنة القادة والميزانيات' : 'Commanders & budget comparison'}
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {data.countries.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => onSelectCountry(c)}
+              className="nx-panel group p-4 text-start transition hover:border-sky-500/40"
+            >
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
+                  {c.flag}
+                </span>
+                <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
+                  {c.militaryBudget}
+                </span>
+              </div>
+              <h3 className="font-display m-0 text-sm font-bold text-white">{c.name}</h3>
+              <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
+                {c.militaryLeader}
+              </p>
+              <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-2.5">
+                <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                  <Building2 className="h-3.5 w-3.5" />
+                  {c.topCompanies.length} {isAr ? 'شركات' : 'companies'}
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-400">
+                  {isAr ? 'الملف' : 'Profile'}
+                  <ArrowUpLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

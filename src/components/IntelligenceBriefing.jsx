@@ -1,76 +1,147 @@
-import React from 'react';
-import { ShieldAlert, TrendingUp, Award, AlertTriangle, Cpu } from 'lucide-react';
+import { TrendingUp, Flame, Zap, ShieldAlert, Users } from 'lucide-react';
 
-export default function IntelligenceBriefing({ lang }) {
+export default function IntelligenceBriefing({ lang, countries }) {
   const isAr = lang === 'ar';
 
+  const topSpenders = [...countries]
+    .filter((c) => /\d/.test(c.militaryBudget))
+    .slice(0, 5);
+
+  const stats = [
+    {
+      label: isAr ? 'الإنفاق العسكري العالمي' : 'Global military spend',
+      value: '$2.44T',
+      delta: '+6.8%',
+      tone: 'emerald',
+    },
+    {
+      label: isAr ? 'مؤشر الصراعات النشطة' : 'Active conflict index',
+      value: isAr ? 'مرتفع' : 'Elevated',
+      delta: isAr ? 'محدّث آلياً' : 'auto-tracked',
+      tone: 'amber',
+    },
+  ];
+
+  const hotspots = [
+    {
+      icon: Flame,
+      tone: 'rose',
+      title: isAr ? 'شرق أوروبا وأوكرانيا' : 'Eastern Europe & Ukraine',
+      body: isAr
+        ? 'استمرار إعادة التموضع العسكري وتدفقات العقوبات الاقتصادية.'
+        : 'Ongoing force repositioning and sanctions flows.',
+    },
+    {
+      icon: Users,
+      tone: 'sky',
+      title: isAr ? 'توسع بريكس وتوازن التجارة' : 'BRICS expansion & trade rebalancing',
+      body: isAr
+        ? 'تعزيز التجارة بالعملات المحلية وتقليل الاعتماد على الدولار.'
+        : 'Local-currency settlement and reduced dollar reliance.',
+    },
+    {
+      icon: Zap,
+      tone: 'amber',
+      title: isAr ? 'أمن الطاقة في الخليج' : 'Gulf energy security',
+      body: isAr
+        ? 'أرامكو وأدنوك وربط الاستثمارات بالسلاسل اللوجستية.'
+        : 'Aramco, ADNOC and supply-chain-backed investment.',
+    },
+  ];
+
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl backdrop-blur-md">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-red-400" />
-          <h3 className="font-bold text-white text-base m-0">
-            {isAr ? 'الإحاطة الاستخباراتية التكتيكية' : 'Tactical Intelligence Briefing'}
+    <div className="space-y-4">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="nx-panel p-3.5"
+          >
+            <p className="m-0 text-[11px] leading-tight text-slate-400">{s.label}</p>
+            <p
+              className={`m-0 mt-1 font-display text-lg font-black ${
+                s.tone === 'emerald' ? 'text-emerald-300' : 'text-amber-300'
+              }`}
+            >
+              {s.value}
+            </p>
+            <p
+              className={`m-0 mt-0.5 flex items-center gap-1 text-[10px] ${
+                s.tone === 'emerald' ? 'text-emerald-400' : 'text-slate-500'
+              }`}
+            >
+              {s.tone === 'emerald' && <TrendingUp className="h-3 w-3" />}
+              {s.delta}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Hotspots */}
+      <section className="nx-panel overflow-hidden">
+        <div className="nx-panel-head">
+          <h3 className="m-0 flex items-center gap-2 text-sm font-bold text-white">
+            <ShieldAlert className="h-4 w-4 text-rose-400" />
+            {isAr ? 'النقاط الساخنة 2026' : 'Strategic hotspots 2026'}
           </h3>
         </div>
-        <span className="flex h-2 w-2 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-        </span>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
-          <span className="text-[11px] text-slate-400 block">{isAr ? 'الإنفاق العسكري العالمي' : 'Global Mil Spend'}</span>
-          <span className="text-lg font-black text-white mt-1 block">$2.44 T</span>
-          <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-            <TrendingUp className="w-3 h-3" /> +6.8% {isAr ? 'سنوياً' : 'YoY'}
-          </span>
+        <div className="space-y-2 p-3">
+          {hotspots.map(({ icon: Icon, tone, title, body }) => (
+            <article
+              key={title}
+              className={`flex gap-2.5 rounded-xl border p-2.5 ${
+                {
+                  rose: 'border-rose-500/20 bg-rose-500/5',
+                  sky: 'border-sky-500/20 bg-sky-500/5',
+                  amber: 'border-amber-500/20 bg-amber-500/5',
+                }[tone]
+              }`}
+            >
+              <span
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
+                  {
+                    rose: 'bg-rose-500/15 text-rose-300',
+                    sky: 'bg-sky-500/15 text-sky-300',
+                    amber: 'bg-amber-500/15 text-amber-300',
+                  }[tone]
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <h4 className="m-0 text-xs font-bold text-slate-100">{title}</h4>
+                <p className="m-0 mt-0.5 text-[11px] leading-relaxed text-slate-400">{body}</p>
+              </div>
+            </article>
+          ))}
         </div>
+      </section>
 
-        <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
-          <span className="text-[11px] text-slate-400 block">{isAr ? 'مؤشر الصراعات النشطة' : 'Active Conflicts Index'}</span>
-          <span className="text-lg font-black text-amber-400 mt-1 block">Level 4</span>
-          <span className="text-[10px] text-slate-400 mt-0.5 block">{isAr ? 'مراقبة بالذكاء الاصطناعي' : 'AI Monitored'}</span>
+      {/* Top spenders */}
+      <section className="nx-panel overflow-hidden">
+        <div className="nx-panel-head">
+          <h3 className="m-0 flex items-center gap-2 text-sm font-bold text-white">
+            <TrendingUp className="h-4 w-4 text-emerald-400" />
+            {isAr ? 'أعلى الميزانيات' : 'Top defense budgets'}
+          </h3>
         </div>
-      </div>
-
-      {/* Strategic Hotspots */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-          {isAr ? 'النقاط الساخنة الاستراتيجية (2026)' : 'Strategic Hotspots (2026)'}
-        </h4>
-
-        <div className="space-y-2 text-xs">
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-start gap-2.5">
-            <span className="bg-red-500/20 text-red-400 p-1 rounded-md mt-0.5">🔥</span>
-            <div>
-              <strong className="text-white block">{isAr ? 'شرق أوروبا وأوكرانيا' : 'Eastern Europe & Ukraine'}</strong>
-              <span className="text-slate-400 text-[11px]">{isAr ? 'استمرار إعادة التموضع العسكري والعقوبات الاقتصادية.' : 'Ongoing military repositioning and economic sanctions.'}</span>
-            </div>
-          </div>
-
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-start gap-2.5">
-            <span className="bg-blue-500/20 text-blue-400 p-1 rounded-md mt-0.5">🌐</span>
-            <div>
-              <strong className="text-white block">{isAr ? 'توسع تكتل بريكس وتجارة العملات' : 'BRICS Expansion & Local Currencies'}</strong>
-              <span className="text-slate-400 text-[11px]">{isAr ? 'تعزيز التبادل التجاري بالعملات المحلية وتقليل الاعتماد على الدولار.' : 'Boosting local currency trade and decoupling.'}</span>
-            </div>
-          </div>
-
-          <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-start gap-2.5">
-            <span className="bg-amber-500/20 text-amber-400 p-1 rounded-md mt-0.5">⚡</span>
-            <div>
-              <strong className="text-white block">{isAr ? 'أمن الطاقة وسلاسل الإمداد الخليجية' : 'Gulf Energy Security & Supply Chains'}</strong>
-              <span className="text-slate-400 text-[11px]">{isAr ? 'دور محور أرامكو وأدنوك ومشاريع البنية التحتية العالمية.' : 'Aramco, ADNOC role and global infrastructure.'}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+        <ul className="m-0 space-y-1 p-3">
+          {topSpenders.map((c, i) => (
+            <li
+              key={c.id}
+              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-xs transition hover:bg-slate-800/60"
+            >
+              <span className="w-4 shrink-0 text-center font-black text-slate-600">{i + 1}</span>
+              <span className="text-base leading-none">{c.flag}</span>
+              <span className="min-w-0 flex-1 truncate text-slate-300">{c.name}</span>
+              <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+                {c.militaryBudget}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
