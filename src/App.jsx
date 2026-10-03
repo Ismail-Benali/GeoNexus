@@ -6,6 +6,8 @@ import MapComponent from './components/MapComponent';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import CountryDetailModal from './components/CountryDetailModal';
 import SearchModal from './components/SearchModal';
+import DashboardSidebar from './components/DashboardSidebar';
+import IntelligenceBriefing from './components/IntelligenceBriefing';
 import { Globe, ArrowRight, BookOpen, ShieldAlert, Cpu } from 'lucide-react';
 
 export default function App() {
@@ -13,6 +15,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'analytics'
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedContinent, setSelectedContinent] = useState('all');
 
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
@@ -44,8 +47,8 @@ export default function App() {
       {/* Live News Ticker */}
       <NewsTickerBar tickerItems={data.newsTicker} lang={lang} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+      {/* Main Dashboard Layout */}
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 py-6 space-y-6">
         
         {/* Header Hero Section */}
         <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
@@ -53,7 +56,7 @@ export default function App() {
           <div className="space-y-3 z-10 text-right md:text-start" style={{ textAlign: isAr ? 'right' : 'left' }}>
             <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-bold">
               <Cpu className="w-3.5 h-3.5" />
-              <span>{isAr ? 'مدعوم بالتحديث الذاتي (GDELT & RSS Real-time)' : 'Powered by Real-time GDELT & RSS Sync'}</span>
+              <span>{isAr ? 'لوحة القيادة الجيوسياسية الاستخباراتية (2026)' : 'Tactical Geopolitical Command Dashboard (2026)'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight m-0">
               {data.title}
@@ -67,25 +70,44 @@ export default function App() {
             {data.continents.map(cont => (
               <div key={cont.id} className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-xl text-center shadow-md">
                 <span className="block text-xs text-slate-400">{cont.name}</span>
-                <span className="block text-lg font-bold text-white">{cont.countriesCount} {isAr ? 'دولة' : 'Countries'}</span>
+                <span className="block text-lg font-bold text-white">{cont.countriesCount} {isAr ? 'دولة' : 'States'}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Dynamic View: Map or Analytics */}
+        {/* Dashboard Grid View */}
         {activeTab === 'map' ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Globe className="w-5 h-5 text-blue-400" />
-                <span>{isAr ? 'خريطة العالم الجيوسياسية (OpenStreetMap)' : 'Global Geopolitical Map (OpenStreetMap)'}</span>
-              </h3>
-              <span className="text-xs text-slate-400">
-                {isAr ? 'اضغط على أي علامة لدولة لعرض الملف الاستخباراتي' : 'Click any country marker to view intelligence profile'}
-              </span>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            
+            {/* Left Sidebar: Country & Continent Selector */}
+            <DashboardSidebar
+              data={data}
+              lang={lang}
+              onSelectCountry={setSelectedCountry}
+              selectedContinent={selectedContinent}
+              setSelectedContinent={setSelectedContinent}
+            />
+
+            {/* Central Map Area */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2 m-0">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                  <span>{isAr ? 'خريطة العمليات الجيوسياسية الحية (OpenStreetMap)' : 'Live Geopolitical Operations Map'}</span>
+                </h3>
+                <span className="text-xs text-slate-400">
+                  {isAr ? 'انقر على أي دولة لعرض الملف' : 'Click any country for profile'}
+                </span>
+              </div>
+              <MapComponent data={data} lang={lang} onSelectCountry={setSelectedCountry} />
             </div>
-            <MapComponent data={data} lang={lang} onSelectCountry={setSelectedCountry} />
+
+            {/* Right Sidebar: Intelligence Briefing */}
+            <div className="lg:col-span-1">
+              <IntelligenceBriefing lang={lang} />
+            </div>
+
           </div>
         ) : (
           <AnalyticsPanel data={data} lang={lang} onSelectCountry={setSelectedCountry} />
@@ -95,7 +117,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
-        <p>GeoNexus 2026 &copy; All Global Geopolitical & Intelligence Rights Reserved.</p>
+        <p>GeoNexus Command Dashboard 2026 &copy; All Global Geopolitical & Intelligence Rights Reserved.</p>
         <p className="mt-1 text-slate-600">OpenStreetMap integration • Real-time GDELT/RSS synchronization • Bilingual AR/EN</p>
       </footer>
 
