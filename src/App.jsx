@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { geopoliticalData } from './data/geopoliticalData';
+import { geopoliticalData } from './data';
 import Navbar from './components/Navbar';
 import NewsTickerBar from './components/NewsTickerBar';
 import MapComponent from './components/MapComponent';
@@ -8,7 +8,7 @@ import CountryDetailModal from './components/CountryDetailModal';
 import SearchModal from './components/SearchModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
-import { Activity, Globe2, Radio } from 'lucide-react';
+import { Activity, FileText, Globe2, Radio } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
@@ -62,6 +62,12 @@ export default function App() {
       label: isAr ? 'قارات مغطاة' : 'Continents covered',
       value: data.continents.length,
       tone: 'text-emerald-300',
+    },
+    {
+      icon: FileText,
+      label: isAr ? 'ملفات تفصيلية' : 'Detailed dossiers',
+      value: `${data.coverage.detailed}/${data.coverage.total}`,
+      tone: 'text-amber-300',
     },
   ];
 
@@ -170,7 +176,7 @@ export default function App() {
         </p>
         <p className="m-0 mt-1 text-[11px] text-slate-600">
           {isAr
-            ? 'البيانات للاستخدام التحليلي العام — تحقّق من المصادر الرسمية قبل Citations.'
+            ? 'البيانات للاستخدام التحليلي العام — تحقّق من المصادر الرسمية قبل الاستشهاد.'
             : 'Data for public analysis — verify against official sources before citing.'}{' '}
           OpenStreetMap · CARTO · GDELT
         </p>

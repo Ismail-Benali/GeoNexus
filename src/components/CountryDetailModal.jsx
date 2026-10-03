@@ -124,7 +124,9 @@ export default function CountryDetailModal({ country, lang, onClose }) {
             <div className="grid gap-3 sm:grid-cols-2">
               <Card title={isAr ? 'القيادة السياسية' : 'Political Leadership'} icon={Users} tone="sky">
                 <Row label={isAr ? 'رئيس الدولة' : 'Head of State'} value={country.leader} />
+                <Row label={isAr ? 'المنصب' : 'Office'} value={country.leaderTitle} />
                 <Row label={isAr ? 'الحزب الحاكم' : 'Ruling Party'} value={country.rulingParty} />
+                <Row label={isAr ? 'نظام الحكم' : 'Government Type'} value={country.regime} />
               </Card>
 
               <Card title={isAr ? 'الأحزاب السياسية' : 'Political Parties'} icon={Landmark} tone="indigo">
@@ -146,7 +148,16 @@ export default function CountryDetailModal({ country, lang, onClose }) {
               </Card>
 
               <Card title={isAr ? 'الموقع والحضور' : 'Position & Reach'} icon={Coins} tone="emerald">
-                <Row label={isAr ? 'القارة' : 'Continent'} value={country.continent.toUpperCase()} />
+                <Row label={isAr ? 'القارة' : 'Continent'} value={country.continentLabel} />
+                <Row label={isAr ? 'المنطقة' : 'Region'} value={country.regionLabel} />
+                <Row
+                  label={isAr ? 'عدد السكان' : 'Population'}
+                  value={
+                    country.populationM
+                      ? `${country.populationM} ${isAr ? 'مليون نسمة' : 'M people'}`
+                      : '—'
+                  }
+                />
                 <Row
                   label={isAr ? 'التحالفات' : 'Alliances'}
                   value={`${country.alliances.length} ${isAr ? 'تحالف' : 'alliances'}`}
@@ -190,10 +201,6 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                       {comp.sector}
                     </span>
                   </div>
-                  <p className="m-0 mb-1 text-[11px] text-slate-400">
-                    <b className="text-slate-200">{isAr ? 'الاستثمار' : 'Investment'}:</b>{' '}
-                    {comp.investment}
-                  </p>
                   <p className="m-0 text-[11px] text-slate-400">
                     <b className="text-slate-200">{isAr ? 'نقاط الضغط' : 'Pressure'}:</b>{' '}
                     {comp.pressure}
@@ -205,21 +212,31 @@ export default function CountryDetailModal({ country, lang, onClose }) {
 
           {tab === 'risk' && (
             <div className="space-y-2.5">
-              <RiskRow
-                tone="amber"
-                title={isAr ? 'غسيل الأموال' : 'Money Laundering'}
-                value={country.corruptionLaundering.moneyLaunderingRisk}
-              />
-              <RiskRow
-                tone="violet"
-                title={isAr ? 'الاتجار بالبشر' : 'Human Trafficking'}
-                value={country.corruptionLaundering.humanTrafficking}
-              />
-              <RiskRow
-                tone="rose"
-                title={isAr ? 'التهديدات الإرهابية' : 'Terrorism Threats'}
-                value={country.corruptionLaundering.terrorismThreat}
-              />
+              {country.risk ? (
+                <>
+                  <RiskRow
+                    tone="amber"
+                    title={isAr ? 'غسيل الأموال' : 'Money Laundering'}
+                    value={country.risk.laundering}
+                  />
+                  <RiskRow
+                    tone="violet"
+                    title={isAr ? 'الاتجار بالبشر' : 'Human Trafficking'}
+                    value={country.risk.trafficking}
+                  />
+                  <RiskRow
+                    tone="rose"
+                    title={isAr ? 'التهديدات الإرهابية' : 'Terrorism Threats'}
+                    value={country.risk.terrorism}
+                  />
+                </>
+              ) : (
+                <p className="m-0 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-3 text-xs text-slate-400">
+                  {isAr
+                    ? 'لم يُنشر ملف المخاطر التفصيلي لهذه الدولة بعد — الملف الأساسي متاح.'
+                    : 'No detailed risk dossier published for this country yet — basic profile available.'}
+                </p>
+              )}
               <p className="m-0 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/80">
                 {isAr
                   ? 'تنبيه: هذه مؤشرات مستخلصة من مصادر مفتوحة وتقديرات، وليست أحكاماً قضائية. راجع التقارير الرسمية قبل الاستشهاد.'
@@ -229,14 +246,24 @@ export default function CountryDetailModal({ country, lang, onClose }) {
           )}
 
           {tab === 'history' && (
-            <ol className="relative space-y-3 border-s-2 border-slate-800 ps-5">
-              {country.historicalEvents.map((event, i) => (
-                <li key={i} className="relative">
-                  <span className="absolute -start-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-500 ring-4 ring-slate-950" />
-                  <p className="m-0 text-[13px] leading-relaxed text-slate-300">{event}</p>
-                </li>
-              ))}
-            </ol>
+            <div className="space-y-3">
+              {country.historicalEvents.length > 0 ? (
+                <ol className="relative space-y-3 border-s-2 border-slate-800 ps-5">
+                  {country.historicalEvents.map((event, i) => (
+                    <li key={i} className="relative">
+                      <span className="absolute -start-[27px] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-500 ring-4 ring-slate-950" />
+                      <p className="m-0 text-[13px] leading-relaxed text-slate-300">{event}</p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="m-0 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-3 text-xs text-slate-400">
+                  {isAr
+                    ? 'لم يُنشر الملف التاريخي لهذه الدولة بعد.'
+                    : 'No historical timeline published for this country yet.'}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

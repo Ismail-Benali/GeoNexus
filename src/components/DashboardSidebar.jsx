@@ -11,21 +11,41 @@ export default function DashboardSidebar({
 }) {
   const isAr = lang === 'ar';
   const [filter, setFilter] = useState('');
+  const [region, setRegion] = useState('all');
+  const [sort, setSort] = useState('name');
+
+  const regions = useMemo(() => {
+    const set = new Set(
+      data.countries.filter((c) => selectedContinent === 'all' || c.continent === selectedContinent).map((c) => c.region),
+    );
+    return [...set].sort();
+  }, [data.countries, selectedContinent]);
 
   const list = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    return data.countries.filter((c) => {
+    const rows = data.countries.filter((c) => {
       const byContinent = selectedContinent === 'all' || c.continent === selectedContinent;
       if (!byContinent) return false;
+      const byRegion = region === 'all' || c.region === region;
+      if (!byRegion) return false;
       if (!q) return true;
       return (
         c.name.toLowerCase().includes(q) ||
         c.capital.toLowerCase().includes(q) ||
         c.leader.toLowerCase().includes(q) ||
+        c.regionLabel.toLowerCase().includes(q) ||
         c.topCompanies.some((comp) => comp.name.toLowerCase().includes(q))
       );
     });
-  }, [data.countries, filter, selectedContinent]);
+
+    const sorted = [...rows];
+    if (sort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name, isAr ? 'ar' : 'en'));
+    if (sort === 'budget') sorted.sort((a, b) => b.militaryBudgetBn - a.militaryBudgetBn);
+    if (sort === 'population') sorted.sort((a, b) => b.populationM - a.populationM);
+    if (sort === 'alliances') sorted.sort((a, b) => b.alliances.length - a.alliances.length);
+    if (sort === 'detail') sorted.sort((a, b) => Number(b.detailed) - Number(a.detailed));
+    return sorted;
+  }, [data.countries, filter, selectedContinent, region, sort, isAr]);
 
   return (
     <aside className="nx-panel flex flex-col overflow-hidden">
@@ -53,6 +73,47 @@ export default function DashboardSidebar({
             {c.name}
           </FilterChip>
         ))}
+      </div>
+
+      {/* Region + sort controls */}
+      <div className="grid grid-cols-2 gap-2 px-4 pt-3">
+        <label className="block">
+          <span className="mb-1 block text-[10px] font-semibold text-slate-500">
+            {isAr ? 'المنطقة' : 'Region'}
+          </span>
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950/70 px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-sky-500/50"
+          >
+            <option value="all">{isAr ? 'كل المناطق' : 'All regions'}</option>
+            {regions.map((r) => {
+              const meta = data.regions.find((x) => x.id === r);
+              return (
+                <option key={r} value={r}>
+                  {meta?.name ?? r}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-[10px] font-semibold text-slate-500">
+            {isAr ? 'الترتيب' : 'Sort by'}
+          </span>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950/70 px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-sky-500/50"
+          >
+            <option value="name">{isAr ? 'الاسم' : 'Name'}</option>
+            <option value="detail">{isAr ? 'التفصيل' : 'Detail level'}</option>
+            <option value="budget">{isAr ? 'ميزانية الجيش' : 'Defence budget'}</option>
+            <option value="population">{isAr ? 'عدد السكان' : 'Population'}</option>
+            <option value="alliances">{isAr ? 'التحالفات' : 'Alliances'}</option>
+          </select>
+        </label>
       </div>
 
       {/* Search */}
@@ -93,7 +154,17 @@ export default function DashboardSidebar({
                 <span className="block truncate text-xs font-bold text-slate-100">
                   {country.name}
                 </span>
-                <span className="block truncate text-[10px] text-slate-500">{country.capital}</span>
+                <span className="block truncate text-[10px] text-slate-500">
+                  {country.regionLabel} · {country.capital}
+                </span>
+              </span>
+              <span
+                className={`shrink-0 text-[9px] font-bold ${
+                  country.detailed ? 'text-emerald-400' : 'text-slate-600'
+                }`}
+                title={country.detailed ? (isAr ? 'ملف تفصيلي' : 'Detailed dossier') : (isAr ? 'ملف أساسي' : 'Basic profile')}
+              >
+                {country.detailed ? '●' : '○'}
               </span>
               <span className="nx-chip shrink-0 border border-rose-500/25 bg-rose-500/10 text-rose-300">
                 {country.militaryBudget}

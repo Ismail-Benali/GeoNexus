@@ -1,75 +1,148 @@
-import { Users, Shield, Building2, ArrowUpLeft } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Users, Building2, Globe2 } from 'lucide-react';
 
 export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
   const isAr = lang === 'ar';
 
+  const byId = useMemo(
+    () => Object.fromEntries(data.countries.map((c) => [c.id, c])),
+    [data.countries],
+  );
+
+  const grouped = useMemo(
+    () =>
+      data.continents
+        .map((cont) => ({
+          ...cont,
+          items: data.countries.filter((c) => c.continent === cont.id),
+        }))
+        .filter((g) => g.items.length > 0),
+    [data.continents, data.countries],
+  );
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Alliances */}
       <section>
         <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
           <Users className="h-4 w-4 text-sky-400" />
-          {isAr ? 'التحالفات الاستراتيجية الكبرى' : 'Major strategic alliances'}
+          {isAr ? 'التحالفات والمنظمات الدولية' : 'Alliances & international bodies'}
+          <span className="nx-chip border border-sky-500/25 bg-sky-500/10 text-sky-300">
+            {data.alliancesList.length}
+          </span>
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.alliancesList.map((a) => (
-            <article key={a.name} className="nx-panel p-4">
-              <h3 className="font-display m-0 text-sm font-bold text-white">{a.name}</h3>
-              <p className="m-0 mt-1 text-[11px] text-sky-300">{a.focus}</p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {a.members.map((m) => (
-                  <span
-                    key={m}
-                    className="nx-chip border border-slate-700 bg-slate-900 text-slate-300"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </article>
+            <AllianceCard key={a.id} alliance={a} byId={byId} isAr={isAr} />
           ))}
         </div>
       </section>
 
-      {/* Country comparison */}
-      <section>
-        <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
-          <Shield className="h-4 w-4 text-rose-400" />
-          {isAr ? 'مقارنة القادة والميزانيات' : 'Commanders & budget comparison'}
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.countries.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onSelectCountry(c)}
-              className="nx-panel group p-4 text-start transition hover:border-sky-500/40"
-            >
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
-                  {c.flag}
-                </span>
-                <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
-                  {c.militaryBudget}
-                </span>
-              </div>
-              <h3 className="font-display m-0 text-sm font-bold text-white">{c.name}</h3>
-              <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
-                {c.militaryLeader}
-              </p>
-              <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-2.5">
-                <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {c.topCompanies.length} {isAr ? 'شركات' : 'companies'}
-                </span>
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-400">
-                  {isAr ? 'الملف' : 'Profile'}
-                  <ArrowUpLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Country comparison grouped by continent */}
+      {grouped.map((group) => (
+        <section key={group.id}>
+          <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
+            <Globe2 className="h-4 w-4 text-emerald-400" />
+            {group.name}
+            <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+              {group.countriesCount}
+            </span>
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {group.items.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => onSelectCountry(c)}
+                className="nx-panel group p-4 text-start transition hover:border-sky-500/40"
+              >
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
+                    {c.flag}
+                  </span>
+                  <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
+                    {c.militaryBudget}
+                  </span>
+                </div>
+                <h3 className="font-display m-0 text-sm font-bold text-white">{c.name}</h3>
+                <p className="m-0 mt-0.5 text-[10px] text-slate-500">
+                  {c.regionLabel} · {c.leaderTitle}
+                </p>
+                <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
+                  {c.leader}
+                </p>
+                <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-2.5">
+                  <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                    <Building2 className="h-3.5 w-3.5" />
+                    {c.detailed
+                      ? `${c.topCompanies.length} ${isAr ? 'شركة' : 'companies'}`
+                      : isAr
+                        ? 'ملف أساسي'
+                        : 'Basic profile'}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold ${c.detailed ? 'text-emerald-400' : 'text-slate-600'}`}
+                  >
+                    {c.detailed ? (isAr ? 'تفصيلي' : 'Full') : (isAr ? 'أساسي' : 'Basic')}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
+  );
+}
+
+const CHIP_LIMIT = 12;
+
+function AllianceCard({ alliance, byId, isAr }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const ids = alliance.memberIds ?? [];
+  const shown = expanded ? ids : ids.slice(0, CHIP_LIMIT);
+  const hidden = ids.length - shown.length;
+
+  return (
+    <article className="nx-panel flex flex-col p-4">
+      <h3 className="font-display m-0 text-sm font-bold text-white">{alliance.name}</h3>
+      <p className="m-0 mt-1 text-[11px] text-sky-300">{alliance.focus}</p>
+      <p className="m-0 mt-1 text-[11px] font-semibold text-slate-500">
+        {isAr ? 'الأعضاء' : 'Members'}: {alliance.members}
+      </p>
+
+      <div className="mt-3 flex flex-1 flex-wrap content-start gap-1.5">
+        {shown.map((id) => {
+          const c = byId[id];
+          return (
+            <span
+              key={id}
+              title={c?.name ?? id}
+              className="nx-chip border border-slate-700 bg-slate-900 text-slate-300"
+            >
+              {c?.flag ?? '🏳️'} {c?.name ?? id}
+            </span>
+          );
+        })}
+
+        {hidden > 0 && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="nx-chip border border-sky-500/30 bg-sky-500/10 text-sky-300 transition hover:bg-sky-500/20"
+          >
+            +{hidden}
+          </button>
+        )}
+      </div>
+
+      {expanded && ids.length > CHIP_LIMIT && (
+        <button
+          onClick={() => setExpanded(false)}
+          className="mt-2 self-start text-[10px] font-semibold text-slate-500 transition hover:text-slate-300"
+        >
+          {isAr ? 'إظهار أقل' : 'Show less'}
+        </button>
+      )}
+    </article>
   );
 }

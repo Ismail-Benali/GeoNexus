@@ -3,21 +3,24 @@ import { TrendingUp, Flame, Zap, ShieldAlert, Users } from 'lucide-react';
 export default function IntelligenceBriefing({ lang, countries }) {
   const isAr = lang === 'ar';
 
+  const globalSpend = countries.reduce((sum, c) => sum + (c.militaryBudgetBn || 0), 0);
+
   const topSpenders = [...countries]
-    .filter((c) => /\d/.test(c.militaryBudget))
-    .slice(0, 5);
+    .filter((c) => c.militaryBudgetBn > 0)
+    .sort((a, b) => b.militaryBudgetBn - a.militaryBudgetBn)
+    .slice(0, 6);
 
   const stats = [
     {
       label: isAr ? 'الإنفاق العسكري العالمي' : 'Global military spend',
-      value: '$2.44T',
-      delta: '+6.8%',
+      value: `$${(globalSpend / 1000).toFixed(2)}T`,
+      delta: isAr ? `مجموع ${countries.filter((c) => c.militaryBudgetBn > 0).length} دولة` : `${countries.filter((c) => c.militaryBudgetBn > 0).length} countries`,
       tone: 'emerald',
     },
     {
-      label: isAr ? 'مؤشر الصراعات النشطة' : 'Active conflict index',
-      value: isAr ? 'مرتفع' : 'Elevated',
-      delta: isAr ? 'محدّث آلياً' : 'auto-tracked',
+      label: isAr ? 'نسبة التغطية التفصيلية' : 'Detailed coverage',
+      value: `${Math.round((countries.filter((c) => c.detailed).length / countries.length) * 100)}%`,
+      delta: `${countries.filter((c) => c.detailed).length}/${countries.length}`,
       tone: 'amber',
     },
   ];
