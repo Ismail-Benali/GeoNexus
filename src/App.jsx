@@ -48,7 +48,7 @@ export default function App() {
       <NewsTickerBar tickerItems={data.newsTicker} lang={lang} />
 
       {/* Main Dashboard Layout */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 py-6 space-y-6">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6 space-y-6">
         
         {/* Header Hero Section */}
         <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
@@ -76,21 +76,23 @@ export default function App() {
           </div>
         </div>
 
-        {/* Dashboard Grid View */}
+        {/* Dashboard 12-Column Grid View */}
         {activeTab === 'map' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            {/* Left Sidebar: Country & Continent Selector */}
-            <DashboardSidebar
-              data={data}
-              lang={lang}
-              onSelectCountry={setSelectedCountry}
-              selectedContinent={selectedContinent}
-              setSelectedContinent={setSelectedContinent}
-            />
+            {/* Left Sidebar: Country & Continent Selector (3 cols) */}
+            <div className="lg:col-span-3">
+              <DashboardSidebar
+                data={data}
+                lang={lang}
+                onSelectCountry={setSelectedCountry}
+                selectedContinent={selectedContinent}
+                setSelectedContinent={setSelectedContinent}
+              />
+            </div>
 
-            {/* Central Map Area */}
-            <div className="lg:col-span-2 space-y-4">
+            {/* Central Map Area (6 cols) */}
+            <div className="lg:col-span-6 space-y-4">
               <div className="flex items-center justify-between bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2 m-0">
                   <Globe className="w-4 h-4 text-blue-400" />
@@ -103,8 +105,8 @@ export default function App() {
               <MapComponent data={data} lang={lang} onSelectCountry={setSelectedCountry} />
             </div>
 
-            {/* Right Sidebar: Intelligence Briefing */}
-            <div className="lg:col-span-1">
+            {/* Right Sidebar: Intelligence Briefing (3 cols) */}
+            <div className="lg:col-span-3">
               <IntelligenceBriefing lang={lang} />
             </div>
 
