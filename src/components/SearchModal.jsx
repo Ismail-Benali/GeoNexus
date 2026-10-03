@@ -141,9 +141,9 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
                       </span>
                     </span>
                     <span className="hidden shrink-0 flex-wrap items-center justify-end gap-1 sm:flex">
-                      {c.alliances.slice(0, 2).map((a) => (
+                      {c.alliances.slice(0, 2).map((a, i) => (
                         <span
-                          key={a}
+                          key={`${a}-${i}`}
                           className="nx-chip max-w-[12rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
                         >
                           <span className="truncate">{a}</span>

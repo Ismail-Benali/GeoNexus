@@ -91,9 +91,9 @@ export default function CountryDetailModal({ country, lang, onClose }) {
           {/* Alliances */}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <Network className="h-3.5 w-3.5 shrink-0 text-sky-400" />
-            {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a) => (
+            {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a, i) => (
               <span
-                key={a}
+                key={`${a}-${i}`}
                 className="nx-chip max-w-[16rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
                 title={a}
               >

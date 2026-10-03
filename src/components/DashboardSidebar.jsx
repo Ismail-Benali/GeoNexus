@@ -45,12 +45,14 @@ export default function DashboardSidebar({
     if (sort === 'alliances') sorted.sort((a, b) => b.alliances.length - a.alliances.length);
     if (sort === 'detail') sorted.sort((a, b) => Number(b.detailed) - Number(a.detailed));
 
-    const groups = [];
+    const groupMap = new Map();
     for (const c of sorted) {
-      const last = groups.at(-1);
-      if (last && last.region === c.region) last.items.push(c);
-      else groups.push({ region: c.region, label: c.regionLabel, items: [c] });
+      if (!groupMap.has(c.region)) {
+        groupMap.set(c.region, { region: c.region, label: c.regionLabel, items: [] });
+      }
+      groupMap.get(c.region).items.push(c);
     }
+    const groups = Array.from(groupMap.values());
     return { rows: sorted, groups };
   }, [data.countries, filter, selectedContinent, region, sort, isAr]);
 
@@ -64,7 +66,7 @@ export default function DashboardSidebar({
           {isAr ? 'دول العالم' : 'Nations'}
         </h3>
         <span className="nx-chip border border-sky-500/25 bg-sky-500/10 text-sky-300">
-          {list.length}
+          {rows.length}
         </span>
       </div>
 
