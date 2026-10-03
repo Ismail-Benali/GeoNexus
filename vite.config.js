@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: process.env.GITHUB_ACTIONS ? '/GeoNexus/' : '/',
   server: {
     host: '0.0.0.0',
     port: 3000,
