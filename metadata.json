@@ -1,0 +1,8 @@
+{
+  "name": "GeoNexus 2026",
+  "description": "GeoNexus 2026 — منصة جيوسياسية واستخباراتية شاملة: الدول، التحالفات، الجيوش، الشركات، الاستثمارات ومؤشرات المخاطر مع خريطة OpenStreetMap حية.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
