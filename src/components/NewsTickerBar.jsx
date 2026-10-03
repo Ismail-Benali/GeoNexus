@@ -83,7 +83,7 @@ export default function NewsTickerBar({ tickerItems, lang }) {
         </button>
       </div>
 
-      <div className="relative min-w-0 flex-1 overflow-hidden">
+      <div className="nx-marquee-track relative min-w-0 flex-1 overflow-hidden">
         <div
           ref={trackRef}
           className="animate-marquee"
@@ -92,7 +92,11 @@ export default function NewsTickerBar({ tickerItems, lang }) {
           {[0, 1].map((dup) => (
             <span key={dup} className="inline-block">
               {marqueeItems.map((item, i) => (
-                <span key={`${dup}-${item.key ?? i}`} className="inline-block">
+                <span
+                  key={`${dup}-${item.key ?? i}`}
+                  dir={isAr ? 'rtl' : 'ltr'}
+                  className="inline-block"
+                >
                   {item.href ? (
                     <a
                       href={item.href}

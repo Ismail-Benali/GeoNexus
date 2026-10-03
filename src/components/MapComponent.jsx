@@ -138,7 +138,7 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
         </MapContainer>
 
         {/* Legend */}
-        <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/85 px-3 py-1.5 text-[11px] text-slate-400 backdrop-blur">
+        <div className="pointer-events-none absolute bottom-3 start-3 z-[500] flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/85 px-3 py-1.5 text-[11px] text-slate-400 backdrop-blur">
           <Layers className="h-3.5 w-3.5 text-sky-400" />
           <span className="nx-marker !h-4 !w-4 !text-[10px]">●</span>
           {isAr ? `${data.countries.length} دولة مرساة على الخريطة` : `${data.countries.length} mapped nations`}

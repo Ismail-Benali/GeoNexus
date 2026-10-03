@@ -55,7 +55,7 @@ export default function IntelligenceBriefing({ lang, countries }) {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {stats.map((s) => (
           <div
             key={s.label}

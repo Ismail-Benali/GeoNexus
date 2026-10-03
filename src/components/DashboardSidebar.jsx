@@ -128,7 +128,7 @@ export default function DashboardSidebar({
       </div>
 
       {/* List */}
-      <div className="mt-3 max-h-[380px] space-y-1 overflow-y-auto px-2 pb-3 lg:max-h-[520px]">
+      <div className="mt-3 max-h-[420px] min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-3 xl:max-h-[560px]">
         {list.length === 0 && (
           <p className="px-3 py-8 text-center text-xs text-slate-500">
             {isAr ? 'لا توجد نتائج مطابقة' : 'No matching results'}

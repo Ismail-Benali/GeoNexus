@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Users, Building2, Globe2 } from 'lucide-react';
+import { Users, Building2, Globe2, ChevronDown } from 'lucide-react';
 
 export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
   const isAr = lang === 'ar';
@@ -20,6 +20,15 @@ export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
     [data.continents, data.countries],
   );
 
+  const [open, setOpen] = useState(() => new Set(grouped.length ? [grouped[0].id] : []));
+  const toggle = (id) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   return (
     <div className="space-y-6">
       {/* Alliances */}
@@ -39,57 +48,78 @@ export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
       </section>
 
       {/* Country comparison grouped by continent */}
-      {grouped.map((group) => (
-        <section key={group.id}>
-          <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
-            <Globe2 className="h-4 w-4 text-emerald-400" />
-            {group.name}
-            <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
-              {group.countriesCount}
-            </span>
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {group.items.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => onSelectCountry(c)}
-                className="nx-panel group p-4 text-start transition hover:border-sky-500/40"
-              >
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
-                    {c.flag}
-                  </span>
-                  <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
-                    {c.militaryBudget}
-                  </span>
-                </div>
-                <h3 className="font-display m-0 text-sm font-bold text-white">{c.name}</h3>
-                <p className="m-0 mt-0.5 text-[10px] text-slate-500">
-                  {c.regionLabel} · {c.leaderTitle}
-                </p>
-                <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
-                  {c.leader}
-                </p>
-                <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-2.5">
-                  <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                    <Building2 className="h-3.5 w-3.5" />
-                    {c.detailed
-                      ? `${c.topCompanies.length} ${isAr ? 'شركة' : 'companies'}`
-                      : isAr
-                        ? 'ملف أساسي'
-                        : 'Basic profile'}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold ${c.detailed ? 'text-emerald-400' : 'text-slate-600'}`}
+      {grouped.map((group) => {
+        const isOpen = open.has(group.id);
+        const full = group.items.filter((c) => c.detailed).length;
+        return (
+          <section key={group.id} className="nx-panel overflow-hidden">
+            <button
+              onClick={() => toggle(group.id)}
+              aria-expanded={isOpen}
+              className="nx-panel-head w-full transition hover:bg-slate-900/60"
+            >
+              <h2 className="font-display m-0 flex items-center gap-2 text-sm font-black text-white">
+                <Globe2 className="h-4 w-4 text-emerald-400" />
+                {group.name}
+              </h2>
+              <span className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500">
+                  {isAr ? `${full}/${group.countriesCount} تفصيلي` : `${full}/${group.countriesCount} full`}
+                </span>
+                <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+                  {group.countriesCount}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </span>
+            </button>
+
+            {isOpen && (
+              <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {group.items.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => onSelectCountry(c)}
+                    className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-start transition hover:border-sky-500/40 hover:bg-slate-900/40"
                   >
-                    {c.detailed ? (isAr ? 'تفصيلي' : 'Full') : (isAr ? 'أساسي' : 'Basic')}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
+                        {c.flag}
+                      </span>
+                      <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
+                        {c.militaryBudget}
+                      </span>
+                    </div>
+                    <h3 className="font-display m-0 text-sm font-bold text-white">{c.name}</h3>
+                    <p className="m-0 mt-0.5 text-[10px] text-slate-500">
+                      {c.regionLabel} · {c.leaderTitle}
+                    </p>
+                    <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
+                      {c.leader}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-2.5">
+                      <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {c.detailed
+                          ? `${c.topCompanies.length} ${isAr ? 'شركة' : 'companies'}`
+                          : isAr
+                            ? 'ملف أساسي'
+                            : 'Basic profile'}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold ${c.detailed ? 'text-emerald-400' : 'text-slate-600'}`}
+                      >
+                        {c.detailed ? (isAr ? 'تفصيلي' : 'Full') : (isAr ? 'أساسي' : 'Basic')}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

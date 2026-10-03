@@ -52,8 +52,10 @@ body {
   font-family: var(--nx-font-display);
 }
 
-[dir="rtl"] .animate-marquee {
-  animation-direction: reverse;
+/* شريط الأخبار: يُثبَّت اتجاه التخطيط فيزيائياً (ltr) حتى يعمل الإزاحة
+   translateX(-50%) بشكل صحيح في العربية، مع بقاء نص كل عنصر باتجاهه. */
+.nx-marquee-track {
+  direction: ltr;
 }
 
 /* ---------- Scrollbars ---------- */
@@ -170,6 +172,22 @@ body {
   background: #0b1220;
   font-family: var(--nx-font-sans);
   z-index: 0;
+}
+
+/* عكس أزرار Leaflet الجانبية في وضع RTL */
+[dir="rtl"] .leaflet-left {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .leaflet-right {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .leaflet-control {
+  margin-inline-start: 10px;
+  margin-inline-end: 0;
 }
 
 .leaflet-control-zoom a,

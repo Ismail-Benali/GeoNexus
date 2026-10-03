@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "smoke": "vite build --ssr src/smoke.jsx --outDir dist-smoke --logLevel warn && node dist-smoke/smoke.js",
     "preview": "vite preview"
   },
   "dependencies": {

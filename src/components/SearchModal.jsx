@@ -1,16 +1,30 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Users, Shield, Search, X, CornerDownLeft } from 'lucide-react';
 
 const SORTS = [
   { id: 'name', ar: 'الاسم', en: 'Name' },
+  { id: 'detail', ar: 'التفصيل', en: 'Detail' },
   { id: 'budget', ar: 'الميزانية', en: 'Budget' },
-  { id: 'companies', ar: 'الشركات', en: 'Companies' },
+  { id: 'alliances', ar: 'التحالفات', en: 'Alliances' },
 ];
+
+const RESULT_LIMIT = 80;
 
 export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
   const isAr = lang === 'ar';
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('name');
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,33 +51,25 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
     }
 
     const sorted = [...rows];
-    if (sort === 'companies') sorted.sort((a, b) => b.topCompanies.length - a.topCompanies.length);
-    else if (sort === 'budget') {
-      const num = (s) => {
-        const m = String(s).match(/([\d.]+)\s*(T|trillion|ترليون|B|billion|مليار)?/i);
-        if (!m) return 0;
-        const v = parseFloat(m[1]) || 0;
-        const unit = (m[2] ?? '').toLowerCase();
-        if (unit.startsWith('t') || unit.includes('ترليون')) return v * 1000;
-        return v;
-      };
-      sorted.sort((a, b) => num(b.militaryBudget) - num(a.militaryBudget));
-    } else {
-      sorted.sort((a, b) => a.name.localeCompare(b.name));
-    }
+    if (sort === 'detail') sorted.sort((a, b) => Number(b.detailed) - Number(a.detailed));
+    else if (sort === 'alliances') sorted.sort((a, b) => b.alliances.length - a.alliances.length);
+    else if (sort === 'budget') sorted.sort((a, b) => b.militaryBudgetBn - a.militaryBudgetBn);
+    else sorted.sort((a, b) => a.name.localeCompare(b.name, isAr ? 'ar' : 'en'));
     return sorted;
-  }, [data.countries, query, sort]);
+  }, [data.countries, query, sort, isAr]);
+
+  const visible = results.slice(0, RESULT_LIMIT);
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-start justify-center bg-slate-950/85 p-3 pt-[8vh] backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="animate-fade-up nx-panel flex max-h-[78vh] w-full max-w-3xl flex-col overflow-hidden !rounded-2xl"
+        className="animate-fade-up nx-panel flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden !rounded-2xl"
       >
         {/* Input */}
         <div className="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
@@ -117,7 +123,7 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
             </p>
           ) : (
             <ul className="m-0 list-none space-y-1 p-0">
-              {results.map((c) => (
+              {visible.map((c) => (
                 <li key={c.id}>
                   <button
                     onClick={() => onSelectCountry(c)}
@@ -150,9 +156,17 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
               ))}
             </ul>
           )}
+
+          {results.length > visible.length && (
+            <p className="mt-2 px-3 py-2 text-center text-[11px] text-slate-500">
+              {isAr
+                ? `يُعرض أول ${visible.length} من ${results.length} — حدّد بحثك لتضييق النتائج`
+                : `Showing first ${visible.length} of ${results.length} — refine your query`}
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-4 py-2 text-[11px] text-slate-500">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-800 px-4 py-2 text-[11px] text-slate-500">
           <span className="flex items-center gap-1.5">
             <Shield className="h-3.5 w-3.5" />
             {isAr ? 'بحث شامل في البيانات المخزنة' : 'Full-text search across stored data'}

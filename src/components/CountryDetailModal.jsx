@@ -19,6 +19,8 @@ const TABS = [
   { id: 'history', icon: History },
 ];
 
+const ALLIANCE_CHIP_LIMIT = 4;
+
 export default function CountryDetailModal({ country, lang, onClose }) {
   const [tabState, setTabState] = useState({ countryId: null, tab: 'overview' });
   const isAr = lang === 'ar';
@@ -48,17 +50,17 @@ export default function CountryDetailModal({ country, lang, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[1000] flex items-center justify-center overflow-hidden bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="animate-fade-up nx-panel my-4 w-full max-w-4xl overflow-hidden !rounded-2xl"
+        className="animate-fade-up nx-panel my-auto flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden !rounded-2xl"
       >
         {/* Header */}
-        <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-l from-slate-900 via-slate-900 to-sky-950/60 px-5 py-4">
+        <div className="relative shrink-0 overflow-hidden border-b border-slate-800 bg-gradient-to-l from-slate-900 via-slate-900 to-sky-950/60 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950/70 text-3xl">
@@ -88,20 +90,29 @@ export default function CountryDetailModal({ country, lang, onClose }) {
 
           {/* Alliances */}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <Network className="h-3.5 w-3.5 text-sky-400" />
-            {country.alliances.map((a) => (
+            <Network className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+            {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a) => (
               <span
                 key={a}
-                className="nx-chip border border-sky-500/25 bg-sky-500/10 text-sky-200"
+                className="nx-chip max-w-[16rem] truncate border border-sky-500/25 bg-sky-500/10 text-sky-200"
+                title={a}
               >
                 {a}
               </span>
             ))}
+            {country.alliances.length > ALLIANCE_CHIP_LIMIT && (
+              <span
+                title={country.alliances.join(' · ')}
+                className="nx-chip cursor-default border border-slate-700 bg-slate-900 text-slate-400"
+              >
+                +{country.alliances.length - ALLIANCE_CHIP_LIMIT}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950/40 px-3 py-2">
+        <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950/40 px-3 py-2">
           {TABS.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -119,7 +130,7 @@ export default function CountryDetailModal({ country, lang, onClose }) {
         </div>
 
         {/* Body */}
-        <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 sm:p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           {tab === 'overview' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <Card title={isAr ? 'القيادة السياسية' : 'Political Leadership'} icon={Users} tone="sky">

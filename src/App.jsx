@@ -88,7 +88,7 @@ export default function App() {
         <section className="nx-grid-lines nx-panel relative mb-5 overflow-hidden">
           <div className="pointer-events-none absolute -end-24 -top-24 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
           <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-7">
-            <div className="max-w-2xl">
+            <div className="min-w-0 flex-1 max-w-2xl">
               <span className="nx-chip mb-3 border border-sky-500/25 bg-sky-500/10 text-sky-300">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-sky-400" />
@@ -117,7 +117,7 @@ export default function App() {
             </div>
 
             {/* Continent grid */}
-            <div className="grid shrink-0 grid-cols-3 gap-2 lg:w-80">
+            <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:w-80">
               {data.continents.map((c) => (
                 <button
                   key={c.id}
@@ -127,7 +127,7 @@ export default function App() {
                   }}
                   className="rounded-xl border border-slate-800 bg-slate-950/60 px-2 py-2.5 text-center transition hover:border-sky-500/40 hover:bg-slate-900"
                 >
-                  <span className="block text-[11px] text-slate-400">{c.name}</span>
+                  <span className="block text-[11px] leading-tight text-slate-400">{c.name}</span>
                   <span className="font-display block text-base font-black text-white">
                     {c.countriesCount}
                   </span>
@@ -139,8 +139,8 @@ export default function App() {
 
         {/* Views */}
         {activeTab === 'map' ? (
-          <div className="grid gap-4 xl:grid-cols-12">
-            <div className="xl:col-span-3">
+          <div className="grid items-start gap-4 xl:grid-cols-12">
+            <div className="min-w-0 xl:col-span-3">
               <DashboardSidebar
                 data={data}
                 lang={lang}
@@ -151,7 +151,7 @@ export default function App() {
               />
             </div>
 
-            <div className="space-y-4 xl:col-span-6">
+            <div className="min-w-0 space-y-4 xl:col-span-6">
               <MapComponent
                 data={data}
                 lang={lang}
@@ -161,7 +161,7 @@ export default function App() {
               />
             </div>
 
-            <div className="xl:col-span-3">
+            <div className="min-w-0 xl:col-span-3">
               <IntelligenceBriefing lang={lang} countries={data.countries} />
             </div>
           </div>
