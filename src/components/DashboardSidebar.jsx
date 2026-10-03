@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, Globe2 } from 'lucide-react';
+import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
 
 export default function DashboardSidebar({
   data,
@@ -165,9 +166,40 @@ export default function DashboardSidebar({
                           : 'border-transparent hover:border-slate-700 hover:bg-slate-800/60'
                       }`}
                     >
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-950/70 text-lg">
-                        {country.flag}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* الشعار */}
+                        <div
+                          className="h-8 w-8 rounded-lg border border-amber-500/25 bg-slate-900/90 p-1 shadow-sm flex items-center justify-center shrink-0"
+                          title={isAr ? `شعار ${country.name}` : `Coat of arms of ${country.name}`}
+                        >
+                          <img
+                            src={getEmblemUrl(country.id)}
+                            alt=""
+                            className="h-full w-full object-contain filter drop-shadow"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fb = e.currentTarget.nextElementSibling;
+                              if (fb) fb.style.display = 'block';
+                            }}
+                          />
+                          <span style={{ display: 'none' }} className="text-xs">{country.flag}</span>
+                        </div>
+
+                        {/* الراية */}
+                        <div className="h-5 w-7 overflow-hidden rounded border border-slate-700 bg-slate-900 shadow-sm shrink-0">
+                          <img
+                            src={getFlagUrl(country.id)}
+                            alt={country.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fb = e.currentTarget.nextElementSibling;
+                              if (fb) fb.style.display = 'block';
+                            }}
+                          />
+                          <span style={{ display: 'none' }} className="text-xs text-center leading-5">{country.flag}</span>
+                        </div>
+                      </div>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-xs font-bold text-slate-100">
                           {country.name}

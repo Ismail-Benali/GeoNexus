@@ -9,7 +9,10 @@ import {
   AlertTriangle,
   Coins,
   Network,
+  Award,
 } from 'lucide-react';
+import { CountryEmblem } from './CountrySymbols';
+import { getFlagUrl } from '../utils/countrySymbols';
 
 const TABS = [
   { id: 'overview', icon: Landmark },
@@ -62,20 +65,43 @@ export default function CountryDetailModal({ country, lang, onClose }) {
         {/* Header */}
         <div className="relative shrink-0 overflow-hidden border-b border-slate-800 bg-gradient-to-l from-slate-900 via-slate-900 to-sky-950/60 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950/70 text-3xl">
-                {country.flag}
-              </span>
-              <div>
-                <h2 className="font-display m-0 text-xl font-black text-white sm:text-2xl">
-                  {country.name}
-                </h2>
-                <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+            <div className="flex items-center gap-3.5 min-w-0">
+              {/* شعار الدولة الرسمي */}
+              <div
+                className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-amber-500/35 bg-gradient-to-b from-amber-500/15 via-slate-900/90 to-slate-950 p-1.5 shadow-lg backdrop-blur"
+                title={isAr ? `شعار ${country.name} الرسمي` : `Official Coat of Arms of ${country.name}`}
+              >
+                <CountryEmblem country={country} className="h-full w-full" />
+              </div>
+
+              {/* راية الدولة والاسم والعاصمة */}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-8 overflow-hidden rounded border border-slate-700 shadow-sm bg-slate-900 shrink-0">
+                    <img
+                      src={getFlagUrl(country.id)}
+                      alt={isAr ? `راية ${country.name}` : `Flag of ${country.name}`}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling;
+                        if (fallback) fallback.style.display = 'block';
+                      }}
+                    />
+                    <span style={{ display: 'none' }} className="text-sm text-center leading-5">{country.flag}</span>
+                  </div>
+                  <h2 className="font-display m-0 truncate text-xl font-black text-white sm:text-2xl">
+                    {country.name}
+                  </h2>
+                </div>
+                <p className="m-0 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
                   <span>
                     {isAr ? 'العاصمة' : 'Capital'}: <b className="text-slate-200">{country.capital}</b>
                   </span>
                   <span className="h-1 w-1 rounded-full bg-slate-600" />
                   <span>{country.leader}</span>
+                  <span className="h-1 w-1 rounded-full bg-slate-600" />
+                  <span className="text-sky-400 font-medium">{country.regionLabel}</span>
                 </p>
               </div>
             </div>
@@ -133,6 +159,44 @@ export default function CountryDetailModal({ country, lang, onClose }) {
         <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           {tab === 'overview' && (
             <div className="grid gap-3 sm:grid-cols-2">
+              {/* بطاقة الرموز السيادية والوطنية */}
+              <Card title={isAr ? 'الرموز السيادية والوطنية' : 'Sovereign & National Symbols'} icon={Award} tone="amber">
+                <div className="flex items-center justify-around gap-4 p-3 rounded-xl border border-slate-800/90 bg-slate-950/80">
+                  {/* الشعار */}
+                  <div className="flex flex-col items-center gap-1.5 text-center">
+                    <div className="h-20 w-20 p-2 rounded-2xl border border-amber-500/35 bg-gradient-to-b from-amber-500/10 via-slate-900 to-slate-950 shadow-md flex items-center justify-center">
+                      <CountryEmblem country={country} className="h-full w-full" />
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-300">
+                      {isAr ? 'شعار الدولة الرسمي' : 'Official State Coat of Arms'}
+                    </span>
+                  </div>
+
+                  {/* الراية */}
+                  <div className="flex flex-col items-center gap-1.5 text-center">
+                    <div className="h-20 w-28 overflow-hidden rounded-xl border border-slate-700 shadow-md bg-slate-900 flex items-center justify-center">
+                      <img
+                        src={getFlagUrl(country.id)}
+                        alt={isAr ? `راية ${country.name}` : `Flag of ${country.name}`}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fb = e.currentTarget.nextElementSibling;
+                          if (fb) fb.style.display = 'block';
+                        }}
+                      />
+                      <span style={{ display: 'none' }} className="text-3xl">{country.flag}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-sky-300">
+                      {isAr ? 'الراية الوطنية الرسمية' : 'Official National Flag'}
+                    </span>
+                  </div>
+                </div>
+
+                <Row label={isAr ? 'رمز الدولة (ISO)' : 'ISO Code'} value={country.id.toUpperCase()} />
+                <Row label={isAr ? 'نظام الحكم' : 'Government Type'} value={country.regime} />
+              </Card>
+
               <Card title={isAr ? 'القيادة السياسية' : 'Political Leadership'} icon={Users} tone="sky">
                 <Row label={isAr ? 'رئيس الدولة' : 'Head of State'} value={country.leader} />
                 <Row label={isAr ? 'المنصب' : 'Office'} value={country.leaderTitle} />

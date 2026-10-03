@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Users, Building2, Globe2, ChevronDown } from 'lucide-react';
+import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
 
 export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
   const isAr = lang === 'ar';
@@ -84,9 +85,41 @@ export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
                     className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-start transition hover:border-sky-500/40 hover:bg-slate-900/40"
                   >
                     <div className="mb-2 flex items-start justify-between gap-2">
-                      <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-800 bg-slate-950/70 text-2xl">
-                        {c.flag}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {/* الشعار */}
+                        <div
+                          className="h-10 w-10 rounded-xl border border-amber-500/25 bg-slate-900/90 p-1 shadow flex items-center justify-center shrink-0"
+                          title={isAr ? `شعار ${c.name}` : `Coat of arms of ${c.name}`}
+                        >
+                          <img
+                            src={getEmblemUrl(c.id)}
+                            alt=""
+                            className="h-full w-full object-contain filter drop-shadow"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fb = e.currentTarget.nextElementSibling;
+                              if (fb) fb.style.display = 'block';
+                            }}
+                          />
+                          <span style={{ display: 'none' }} className="text-sm">{c.flag}</span>
+                        </div>
+
+                        {/* الراية */}
+                        <div className="h-6 w-9 overflow-hidden rounded border border-slate-700 bg-slate-900 shadow-sm shrink-0">
+                          <img
+                            src={getFlagUrl(c.id)}
+                            alt={c.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fb = e.currentTarget.nextElementSibling;
+                              if (fb) fb.style.display = 'block';
+                            }}
+                          />
+                          <span style={{ display: 'none' }} className="text-base text-center leading-6">{c.flag}</span>
+                        </div>
+                      </div>
+
                       <span className="nx-chip border border-rose-500/25 bg-rose-500/10 text-rose-300">
                         {c.militaryBudget}
                       </span>

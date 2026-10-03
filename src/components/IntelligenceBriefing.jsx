@@ -1,4 +1,5 @@
 import { TrendingUp, Flame, Zap, ShieldAlert, Users } from 'lucide-react';
+import { getFlagUrl } from '../utils/countrySymbols';
 
 export default function IntelligenceBriefing({ lang, countries }) {
   const isAr = lang === 'ar';
@@ -138,8 +139,20 @@ export default function IntelligenceBriefing({ lang, countries }) {
               className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-xs transition hover:bg-slate-800/60"
             >
               <span className="w-4 shrink-0 text-center font-black text-slate-600">{i + 1}</span>
-              <span className="text-base leading-none">{c.flag}</span>
-              <span className="min-w-0 flex-1 truncate text-slate-300">{c.name}</span>
+              <div className="h-4 w-6 overflow-hidden rounded border border-slate-700 bg-slate-900 shadow-sm shrink-0">
+                <img
+                  src={getFlagUrl(c.id)}
+                  alt={c.name}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fb = e.currentTarget.nextElementSibling;
+                    if (fb) fb.style.display = 'block';
+                  }}
+                />
+                <span style={{ display: 'none' }} className="text-xs text-center leading-4">{c.flag}</span>
+              </div>
+              <span className="min-w-0 flex-1 truncate text-slate-300 font-medium">{c.name}</span>
               <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
                 {c.militaryBudget}
               </span>

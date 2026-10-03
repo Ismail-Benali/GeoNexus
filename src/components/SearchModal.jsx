@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Users, Shield, Search, X, CornerDownLeft } from 'lucide-react';
+import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
 
 const SORTS = [
   { id: 'name', ar: 'الاسم', en: 'Name' },
@@ -129,9 +130,40 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
                     onClick={() => onSelectCountry(c)}
                     className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-start transition hover:border-sky-500/40 hover:bg-slate-800/60"
                   >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-950/70 text-xl">
-                      {c.flag}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* الشعار */}
+                      <div
+                        className="h-9 w-9 rounded-xl border border-amber-500/25 bg-slate-900/90 p-1 shadow-sm flex items-center justify-center shrink-0"
+                        title={isAr ? `شعار ${c.name}` : `Coat of arms of ${c.name}`}
+                      >
+                        <img
+                          src={getEmblemUrl(c.id)}
+                          alt=""
+                          className="h-full w-full object-contain filter drop-shadow"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fb = e.currentTarget.nextElementSibling;
+                            if (fb) fb.style.display = 'block';
+                          }}
+                        />
+                        <span style={{ display: 'none' }} className="text-sm">{c.flag}</span>
+                      </div>
+
+                      {/* الراية */}
+                      <div className="h-6 w-9 overflow-hidden rounded border border-slate-700 bg-slate-900 shadow-sm shrink-0">
+                        <img
+                          src={getFlagUrl(c.id)}
+                          alt={c.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fb = e.currentTarget.nextElementSibling;
+                            if (fb) fb.style.display = 'block';
+                          }}
+                        />
+                        <span style={{ display: 'none' }} className="text-sm text-center leading-6">{c.flag}</span>
+                      </div>
+                    </div>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold text-slate-100">
                         {c.name}
