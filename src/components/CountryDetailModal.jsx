@@ -94,10 +94,10 @@ export default function CountryDetailModal({ country, lang, onClose }) {
             {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a) => (
               <span
                 key={a}
-                className="nx-chip max-w-[16rem] truncate border border-sky-500/25 bg-sky-500/10 text-sky-200"
+                className="nx-chip max-w-[16rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
                 title={a}
               >
-                {a}
+                <span className="truncate">{a}</span>
               </span>
             ))}
             {country.alliances.length > ALLIANCE_CHIP_LIMIT && (
@@ -297,19 +297,19 @@ function Card({ title, icon: Icon, tone = 'sky', children }) {
       <h3
         className={`m-0 mb-2.5 flex items-center gap-2 text-sm font-bold ${TONES[tone] ?? TONES.sky}`}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-4 w-4 shrink-0" />
         {title}
       </h3>
-      <div className="space-y-1.5">{children}</div>
+      <div className="grid gap-1">{children}</div>
     </section>
   );
 }
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-start justify-between gap-3 text-xs">
+    <div className="nx-row text-xs">
       <span className="shrink-0 text-slate-500">{label}</span>
-      <span className="text-end font-semibold text-slate-200">{value}</span>
+      <span className="min-w-0 text-end font-semibold break-words text-slate-200">{value}</span>
     </div>
   );
 }

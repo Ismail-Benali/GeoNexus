@@ -102,22 +102,23 @@ export default function App() {
               </h1>
               <p className="m-0 mt-2 text-sm leading-relaxed text-slate-400">{data.subtitle}</p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {stats.map(({ icon: Icon, label, value, tone }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2"
-                  >
-                    <Icon className={`h-4 w-4 ${tone}`} />
-                    <span className="text-[11px] text-slate-500">{label}</span>
-                    <span className="font-display text-sm font-black text-white">{value}</span>
+                  <div key={label} className="nx-card">
+                    <span className="flex items-center gap-1.5">
+                      <Icon className={`h-3.5 w-3.5 shrink-0 ${tone}`} />
+                      <span className="truncate text-[11px] text-slate-400">{label}</span>
+                    </span>
+                    <span className="font-display text-lg font-black leading-none text-white">
+                      {value}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Continent grid */}
-            <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:w-80">
+            {/* Continent cards */}
+            <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:w-[21rem]">
               {data.continents.map((c) => (
                 <button
                   key={c.id}
@@ -125,11 +126,18 @@ export default function App() {
                     setSelectedContinent(c.id);
                     setActiveTab('map');
                   }}
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 px-2 py-2.5 text-center transition hover:border-sky-500/40 hover:bg-slate-900"
+                  className="group rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2.5 text-start transition hover:border-sky-500/40 hover:bg-slate-900"
                 >
-                  <span className="block text-[11px] leading-tight text-slate-400">{c.name}</span>
-                  <span className="font-display block text-base font-black text-white">
-                    {c.countriesCount}
+                  <span className="block text-[11px] font-semibold leading-tight break-words text-slate-400">
+                    {c.name}
+                  </span>
+                  <span className="mt-1.5 flex items-baseline gap-1.5">
+                    <span className="font-display text-xl font-black leading-none text-white">
+                      {c.countriesCount}
+                    </span>
+                    <span className="text-[10px] leading-none text-slate-500">
+                      {isAr ? 'دولة' : 'nations'}
+                    </span>
                   </span>
                 </button>
               ))}

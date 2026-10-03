@@ -144,9 +144,9 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
                       {c.alliances.slice(0, 2).map((a) => (
                         <span
                           key={a}
-                          className="nx-chip border border-sky-500/25 bg-sky-500/10 text-sky-200"
+                          className="nx-chip max-w-[12rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
                         >
-                          {a}
+                          <span className="truncate">{a}</span>
                         </span>
                       ))}
                     </span>

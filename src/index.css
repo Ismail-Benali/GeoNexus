@@ -95,12 +95,69 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  max-width: 100%;
   padding: 0.25rem 0.625rem;
   border-radius: 0.5rem;
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.4;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* شريحة تحتوي أيقونة/نص داخلي: النصوص الداخلية تقتل بدل أن تدفع المحتوى */
+.nx-chip > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* بطاقة موحّدة للإحصاءات والبيانات */
+.nx-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--nx-border);
+  border-radius: 0.875rem;
+  background: rgba(2, 6, 23, 0.6);
+  min-width: 0;
+}
+
+/* صف بيانات مفصول — يمنع التصاق التسمية بالقيمة */
+.nx-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgba(2, 6, 23, 0.45);
+  min-width: 0;
+}
+
+.nx-row + .nx-row {
+  margin-top: 0.25rem;
+}
+
+/* ---------- استعلامات الحاوية ----------
+   لوحة الإحاطة تُعرض داخل عمود ضيق في الداشبورد (~380px) وبعرض كامل في
+   الشاشات المتوسطة، فاستعلام الحاوية أدق من media query هنا. */
+.nx-brief {
+  container-type: inline-size;
+}
+
+.nx-brief-stats {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container (min-width: 30rem) {
+  .nx-brief-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .nx-grid-lines {

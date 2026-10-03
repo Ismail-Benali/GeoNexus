@@ -148,9 +148,11 @@ function AllianceCard({ alliance, byId, isAr }) {
             <span
               key={id}
               title={c?.name ?? id}
-              className="nx-chip border border-slate-700 bg-slate-900 text-slate-300"
+              className="nx-chip max-w-[10rem] border border-slate-700 bg-slate-900 text-slate-300"
             >
-              {c?.flag ?? '🏳️'} {c?.name ?? id}
+              <span className="truncate">
+                {c?.flag ?? '🏳️'} {c?.name ?? id}
+              </span>
             </span>
           );
         })}

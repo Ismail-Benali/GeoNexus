@@ -3,7 +3,9 @@ import { TrendingUp, Flame, Zap, ShieldAlert, Users } from 'lucide-react';
 export default function IntelligenceBriefing({ lang, countries }) {
   const isAr = lang === 'ar';
 
-  const globalSpend = countries.reduce((sum, c) => sum + (c.militaryBudgetBn || 0), 0);
+  const totalSpend = countries.reduce((sum, c) => sum + (c.militaryBudgetBn || 0), 0);
+  const withBudget = countries.filter((c) => c.militaryBudgetBn > 0).length;
+  const detailed = countries.filter((c) => c.detailed).length;
 
   const topSpenders = [...countries]
     .filter((c) => c.militaryBudgetBn > 0)
@@ -13,14 +15,14 @@ export default function IntelligenceBriefing({ lang, countries }) {
   const stats = [
     {
       label: isAr ? 'الإنفاق العسكري العالمي' : 'Global military spend',
-      value: `$${(globalSpend / 1000).toFixed(2)}T`,
-      delta: isAr ? `مجموع ${countries.filter((c) => c.militaryBudgetBn > 0).length} دولة` : `${countries.filter((c) => c.militaryBudgetBn > 0).length} countries`,
+      value: `$${(totalSpend / 1000).toFixed(2)}T`,
+      delta: isAr ? `مجموع ${withBudget} دولة` : `${withBudget} countries`,
       tone: 'emerald',
     },
     {
       label: isAr ? 'نسبة التغطية التفصيلية' : 'Detailed coverage',
-      value: `${Math.round((countries.filter((c) => c.detailed).length / countries.length) * 100)}%`,
-      delta: `${countries.filter((c) => c.detailed).length}/${countries.length}`,
+      value: `${Math.round((detailed / countries.length) * 100)}%`,
+      delta: `${detailed}/${countries.length}`,
       tone: 'amber',
     },
   ];
@@ -53,24 +55,24 @@ export default function IntelligenceBriefing({ lang, countries }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="nx-brief space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="nx-brief-stats">
         {stats.map((s) => (
           <div
             key={s.label}
-            className="nx-panel p-3.5"
+            className="nx-card"
           >
             <p className="m-0 text-[11px] leading-tight text-slate-400">{s.label}</p>
             <p
-              className={`m-0 mt-1 font-display text-lg font-black ${
+              className={`m-0 font-display text-lg font-black leading-none ${
                 s.tone === 'emerald' ? 'text-emerald-300' : 'text-amber-300'
               }`}
             >
               {s.value}
             </p>
             <p
-              className={`m-0 mt-0.5 flex items-center gap-1 text-[10px] ${
+              className={`m-0 flex items-center gap-1 text-[10px] leading-none ${
                 s.tone === 'emerald' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >

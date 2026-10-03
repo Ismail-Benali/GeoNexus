@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, ChevronLeft, Globe2 } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Globe2 } from 'lucide-react';
 
 export default function DashboardSidebar({
   data,
@@ -44,8 +44,17 @@ export default function DashboardSidebar({
     if (sort === 'population') sorted.sort((a, b) => b.populationM - a.populationM);
     if (sort === 'alliances') sorted.sort((a, b) => b.alliances.length - a.alliances.length);
     if (sort === 'detail') sorted.sort((a, b) => Number(b.detailed) - Number(a.detailed));
-    return sorted;
+
+    const groups = [];
+    for (const c of sorted) {
+      const last = groups.at(-1);
+      if (last && last.region === c.region) last.items.push(c);
+      else groups.push({ region: c.region, label: c.regionLabel, items: [c] });
+    }
+    return { rows: sorted, groups };
   }, [data.countries, filter, selectedContinent, region, sort, isAr]);
+
+  const { rows, groups } = list;
 
   return (
     <aside className="nx-panel flex flex-col overflow-hidden">
@@ -127,52 +136,72 @@ export default function DashboardSidebar({
         />
       </div>
 
-      {/* List */}
-      <div className="mt-3 max-h-[420px] min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-3 xl:max-h-[560px]">
-        {list.length === 0 && (
+      {/* List — grouped by region */}
+      <div className="mt-3 max-h-[420px] min-h-0 flex-1 space-y-3 overflow-y-auto px-2 pb-3 xl:max-h-[560px]">
+        {rows.length === 0 && (
           <p className="px-3 py-8 text-center text-xs text-slate-500">
             {isAr ? 'لا توجد نتائج مطابقة' : 'No matching results'}
           </p>
         )}
 
-        {list.map((country) => {
-          const active = country.id === activeCountryId;
-          return (
-            <button
-              key={country.id}
-              onClick={() => onSelectCountry(country)}
-              className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-start transition ${
-                active
-                  ? 'border-sky-500/50 bg-sky-500/10'
-                  : 'border-transparent hover:border-slate-700 hover:bg-slate-800/60'
-              }`}
-            >
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-950/70 text-lg">
-                {country.flag}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-bold text-slate-100">
-                  {country.name}
-                </span>
-                <span className="block truncate text-[10px] text-slate-500">
-                  {country.regionLabel} · {country.capital}
-                </span>
-              </span>
-              <span
-                className={`shrink-0 text-[9px] font-bold ${
-                  country.detailed ? 'text-emerald-400' : 'text-slate-600'
-                }`}
-                title={country.detailed ? (isAr ? 'ملف تفصيلي' : 'Detailed dossier') : (isAr ? 'ملف أساسي' : 'Basic profile')}
-              >
-                {country.detailed ? '●' : '○'}
-              </span>
-              <span className="nx-chip shrink-0 border border-rose-500/25 bg-rose-500/10 text-rose-300">
-                {country.militaryBudget}
-              </span>
-              <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-slate-600 rtl:hidden ltr:block" />
-            </button>
-          );
-        })}
+        {groups.map((g) => (
+          <section key={g.region}>
+            <h4 className="sticky top-0 z-10 mb-1.5 flex items-center justify-between gap-2 border-b border-slate-800/80 bg-slate-950/95 px-1 pb-1 text-[10px] font-bold tracking-wide text-slate-400 backdrop-blur">
+              <span className="truncate">{g.label}</span>
+              <span className="shrink-0 text-slate-600">{g.items.length}</span>
+            </h4>
+            <ul className="m-0 list-none space-y-1 p-0">
+              {g.items.map((country) => {
+                const active = country.id === activeCountryId;
+                return (
+                  <li key={country.id}>
+                    <button
+                      onClick={() => onSelectCountry(country)}
+                      className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-start transition ${
+                        active
+                          ? 'border-sky-500/50 bg-sky-500/10'
+                          : 'border-transparent hover:border-slate-700 hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-950/70 text-lg">
+                        {country.flag}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-bold text-slate-100">
+                          {country.name}
+                        </span>
+                        <span className="block truncate text-[10px] text-slate-500">
+                          {country.capital}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 text-[9px] font-bold ${
+                          country.detailed ? 'text-emerald-400' : 'text-slate-600'
+                        }`}
+                        title={
+                          country.detailed
+                            ? isAr
+                              ? 'ملف تفصيلي'
+                              : 'Detailed dossier'
+                            : isAr
+                              ? 'ملف أساسي'
+                              : 'Basic profile'
+                        }
+                      >
+                        {country.detailed ? '●' : '○'}
+                      </span>
+                      <span className="nx-chip shrink-0 border border-rose-500/25 bg-rose-500/10 text-rose-300">
+                        {country.militaryBudget}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-600 ltr:block rtl:hidden" />
+                      <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-slate-600 ltr:hidden rtl:block" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
     </aside>
   );
