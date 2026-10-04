@@ -7,6 +7,7 @@
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646cff)](https://vite.dev)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
 
 [English](#about) | [العربية](#عن-المشروع)
 
@@ -207,3 +208,23 @@ property of their respective publishers and are fetched by reference, not redist
 Issues and pull requests are welcome. If you add a country dossier, keep both `ar` and `en`
 strings — the app renders Arabic by default and RTL layout depends on the Arabic fields
 being present.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
+
+The code is MIT-licensed. The **data** it displays is not, and carries its own terms:
+
+| Layer | Terms |
+| --- | --- |
+| Source code | MIT (this repo) |
+| Country facts | [Wikidata](https://www.wikidata.org) — CC0 |
+| Economic / military indicators | The World Bank, World Development Indicators — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), attribution required |
+| Base map tiles | © OpenStreetMap contributors ([ODbL](https://www.openstreetmap.org/copyright)) |
+| Flags | [FlagCDN](https://flagcdn.com) — flags are public-domain government works, but FlagCDN itself is a third-party service |
+| Coat of arms | [coat-of-arms](https://github.com/scripta/coat-of-arms) project |
+| News headlines | Property of their respective publishers; fetched by reference, never redistributed |
+
+MIT requires the copyright notice to be preserved when redistributing the code.

@@ -372,8 +372,8 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                 busy={statsBusy}
                 note={
                   isAr
-                    ? 'معدل القتل المتعمد ووفيات المعارك — مؤشرات بديلة لانعدام الأمن والنزاع، وليست تقييمات رسمية، وسنة القياس تختلف من دولة لأخرى. المصدر: البنك الدولي.'
-                    : 'Intentional homicide rate and battle-related deaths are proxies for insecurity and conflict, not official risk ratings; reference years vary by country. Source: World Bank.'
+                    ? 'معدل القتل المتعمد ووفيات المعارك — مؤشرات بديلة لانعدام الأمن والنزاع، وليست تقييمات رسمية، وسنة القياس تختلف من دولة لأخرى. المصدر: البنك الدولي، قاعدة بيانات التنمية العالمية (WDI) — بترخيص CC BY 4.0.'
+                    : 'Intentional homicide rate and battle-related deaths are proxies for insecurity and conflict, not official risk ratings; reference years vary by country. Source: The World Bank, World Development Indicators (WDI) — CC BY 4.0.'
                 }
               />
             </div>
@@ -504,8 +504,8 @@ function LiveStats({ title, icon: Icon, tone = 'sky', entries, lang, busy, note 
       <p className="m-0 mt-2 text-[10px] leading-relaxed text-slate-500">
         {note ??
           (isAr
-            ? 'المصدر: البنك الدولي — بيانات سنوية، والسنة بين قوسين هي سنة القياس.'
-            : 'Source: World Bank — annual data; the year in brackets is the reference year.')}
+            ? 'المصدر: البنك الدولي — قاعدة بيانات التنمية العالمية (WDI). بيانات سنوية؛ والسنة بين قوسين هي سنة القياس. يُستخدم بترخيص CC BY 4.0 الذي يشترط ذكر المصدر.'
+            : 'Source: The World Bank, World Development Indicators (WDI). Annual data; the year in brackets is the reference year. Used under CC BY 4.0, which requires attribution.')}
       </p>
     </section>
   );
