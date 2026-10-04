@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { CountryEmblem } from './CountrySymbols';
 import { getFlagUrl } from '../utils/countrySymbols';
+import { fetchCountryStats, formatStat } from '../services/worldbank.js';
 
 const TABS = [
   { id: 'overview', icon: Landmark },
@@ -26,10 +27,37 @@ const ALLIANCE_CHIP_LIMIT = 4;
 
 export default function CountryDetailModal({ country, lang, onClose }) {
   const [tabState, setTabState] = useState({ countryId: null, tab: 'overview' });
+  // خريطة { [countryId]: data|null } — تحفظ نتيجة كل دولة بعد جلبها،
+  // والاشتقاق منها يمنع عرض بيانات دولة أثناء الانتقال إلى أخرى.
+  const [settled, setSettled] = useState({});
   const isAr = lang === 'ar';
 
   const tab = tabState.countryId === country?.id ? tabState.tab : 'overview';
   const setTab = (next) => setTabState({ countryId: country?.id ?? null, tab: next });
+
+  const countryId = country?.id ?? null;
+  const stats = countryId && countryId in settled ? settled[countryId] : null;
+  const statsBusy = Boolean(countryId) && !(countryId in settled);
+
+  // بيانات البنك الدولي: الجيش + الاقتصاد + مؤشرات المخاطر
+  useEffect(() => {
+    if (!countryId) return undefined;
+    const ac = new AbortController();
+    let alive = true;
+    fetchCountryStats(countryId, { signal: ac.signal })
+      .then((data) => {
+        if (!alive) return;
+        setSettled((prev) => ({ ...prev, [countryId]: data?.available ? data : null }));
+      })
+      .catch(() => {
+        if (!alive) return;
+        setSettled((prev) => ({ ...prev, [countryId]: null }));
+      });
+    return () => {
+      alive = false;
+      ac.abort();
+    };
+  }, [countryId]);
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -260,28 +288,46 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                   ))}
                 </div>
               </Card>
+              <LiveStats
+                title={isAr ? 'قوة الجيش (البنك الدولي)' : 'Military Strength (World Bank)'}
+                icon={Shield}
+                tone="rose"
+                entries={stats?.military}
+                lang={lang}
+                busy={statsBusy}
+              />
             </div>
           )}
 
           {tab === 'economy' && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {country.topCompanies.map((comp, idx) => (
-                <div
-                  key={`${comp.name}-${idx}`}
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 transition hover:border-emerald-500/30"
-                >
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h4 className="m-0 text-sm font-bold text-white">{comp.name}</h4>
-                    <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
-                      {comp.sector}
-                    </span>
+            <div className="space-y-3">
+              <LiveStats
+                title={isAr ? 'مؤشرات الاقتصاد (البنك الدولي)' : 'Economic Indicators (World Bank)'}
+                icon={Coins}
+                tone="emerald"
+                entries={stats?.economy}
+                lang={lang}
+                busy={statsBusy}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {country.topCompanies.map((comp, idx) => (
+                  <div
+                    key={`${comp.name}-${idx}`}
+                    className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 transition hover:border-emerald-500/30"
+                  >
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <h4 className="m-0 text-sm font-bold text-white">{comp.name}</h4>
+                      <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+                        {comp.sector}
+                      </span>
+                    </div>
+                    <p className="m-0 text-[11px] text-slate-400">
+                      <b className="text-slate-200">{isAr ? 'نقاط الضغط' : 'Pressure'}:</b>{' '}
+                      {comp.pressure}
+                    </p>
                   </div>
-                  <p className="m-0 text-[11px] text-slate-400">
-                    <b className="text-slate-200">{isAr ? 'نقاط الضغط' : 'Pressure'}:</b>{' '}
-                    {comp.pressure}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
@@ -317,6 +363,19 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                   ? 'تنبيه: هذه مؤشرات مستخلصة من مصادر مفتوحة وتقديرات، وليست أحكاماً قضائية. راجع التقارير الرسمية قبل الاستشهاد.'
                   : 'Note: indicators are compiled from open-source estimates, not legal findings. Verify with official reports before citing.'}
               </p>
+              <LiveStats
+                title={isAr ? 'مؤشرات موضوعية للمخاطر (البنك الدولي)' : 'Objective Risk Indicators (World Bank)'}
+                icon={AlertTriangle}
+                tone="amber"
+                entries={stats?.risk}
+                lang={lang}
+                busy={statsBusy}
+                note={
+                  isAr
+                    ? 'معدل القتل المتعمد ووفيات المعارك — مؤشرات بديلة لانعدام الأمن والنزاع، وليست تقييمات رسمية، وسنة القياس تختلف من دولة لأخرى. المصدر: البنك الدولي.'
+                    : 'Intentional homicide rate and battle-related deaths are proxies for insecurity and conflict, not official risk ratings; reference years vary by country. Source: World Bank.'
+                }
+              />
             </div>
           )}
 
@@ -397,3 +456,58 @@ function RiskRow({ tone = 'amber', title, value }) {
     </div>
   );
 }
+
+/**
+ * بطاقة بيانات البنك الدولي الحية.
+ * تعرض فقط المؤشرات المتوفرة لهذا الرقم، مع سنة المرجع بجانب كل قيمة
+ * لأن هذه بيانات سنوية لا تتحدث لحظياً.
+ */
+function LiveStats({ title, icon: Icon, tone = 'sky', entries, lang, busy, note }) {
+  const isAr = lang === 'ar';
+  const rows = (entries ?? []).filter((e) => e && e.value != null);
+
+  if (!rows.length) {
+    if (!busy) return null;
+    return (
+      <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+        <p className="m-0 text-[11px] text-slate-500">
+          {isAr ? 'جارٍ جلب بيانات البنك الدولي…' : 'Fetching World Bank data…'}
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+      <h3
+        className={`m-0 mb-2.5 flex items-center gap-2 text-sm font-bold ${TONES[tone] ?? TONES.sky}`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        {title}
+        <span className="nx-chip border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+          {isAr ? 'مباشر' : 'LIVE'}
+        </span>
+      </h3>
+      <div className="grid gap-1">
+        {rows.map((e) => (
+          <div key={e.id} className="nx-row text-xs">
+            <span className="shrink-0 text-slate-500">{isAr ? e.ar : e.en}</span>
+            <span className="min-w-0 text-end font-semibold break-words text-slate-200">
+              {formatStat(e, e.format, lang)}
+              {e.year ? (
+                <span className="ms-1.5 text-[10px] font-normal text-slate-500">({e.year})</span>
+              ) : null}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="m-0 mt-2 text-[10px] leading-relaxed text-slate-500">
+        {note ??
+          (isAr
+            ? 'المصدر: البنك الدولي — بيانات سنوية، والسنة بين قوسين هي سنة القياس.'
+            : 'Source: World Bank — annual data; the year in brackets is the reference year.')}
+      </p>
+    </section>
+  );
+}
+
