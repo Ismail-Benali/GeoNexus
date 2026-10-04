@@ -4,6 +4,18 @@ import { fetchGeoNews } from '../services/news.js';
 
 const REFRESH_MS = 10 * 60 * 1000;
 
+/**
+ * Scrolling speed in px/second. Lower = slower and heavier to read.
+ *
+ * The keyframe travels translateX(-50%), so a fixed duration makes the apparent speed
+ * depend on how many headlines loaded: fast with a full live feed, sluggish with the
+ * 4-item fallback. Deriving the duration from the measured track width keeps the
+ * perceived speed constant regardless of feed length.
+ */
+const SPEED_PX_PER_SEC = 80;
+const MIN_DURATION_S = 45;
+const MAX_DURATION_S = 260;
+
 export default function NewsTickerBar({ tickerItems, lang }) {
   const isAr = lang === 'ar';
   const [items, setItems] = useState(tickerItems);
@@ -13,6 +25,7 @@ export default function NewsTickerBar({ tickerItems, lang }) {
   const [paused, setPaused] = useState(false);
   const [busy, setBusy] = useState(false);
   const trackRef = useRef(null);
+  const observerRef = useRef(null);
   const abortRef = useRef(null);
 
   const loadLiveFeed = useCallback(async () => {
@@ -49,6 +62,34 @@ export default function NewsTickerBar({ tickerItems, lang }) {
     typeof item === 'string' ? { key: item, text: item } : item,
   );
 
+  const [durationS, setDurationS] = useState(MIN_DURATION_S);
+
+  // Measured in a callback ref rather than an effect so it runs during the commit
+  // phase (before paint) and never renders twice. ResizeObserver covers later changes:
+  // the track is nowrap inline-block, so its width grows with the headline count.
+  const measureTrack = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    // The list is rendered twice for a seamless loop, so one cycle is half the width.
+    const cycleWidth = el.scrollWidth / 2;
+    if (!cycleWidth) return;
+    const next = cycleWidth / SPEED_PX_PER_SEC;
+    setDurationS(Math.min(MAX_DURATION_S, Math.max(MIN_DURATION_S, next)));
+  }, []);
+
+  const attachTrack = useCallback(
+    (el) => {
+      trackRef.current = el;
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+      if (!el) return;
+      measureTrack();
+      observerRef.current = new ResizeObserver(measureTrack);
+      observerRef.current.observe(el);
+    },
+    [measureTrack],
+  );
+
   const sourceLabel = live
     ? `${source ?? 'live'} · ${updatedAt?.toLocaleTimeString()}`
     : isAr
@@ -82,9 +123,12 @@ export default function NewsTickerBar({ tickerItems, lang }) {
 
       <div className="nx-marquee-track relative min-w-0 flex-1 overflow-hidden">
         <div
-          ref={trackRef}
+          ref={attachTrack}
           className="animate-marquee"
-          style={{ animationPlayState: paused ? 'paused' : 'running' }}
+          style={{
+            animationDuration: `${durationS}s`,
+            animationPlayState: paused ? 'paused' : 'running',
+          }}
         >
           {[0, 1].map((dup) => (
             <span key={dup} className="inline-block">
