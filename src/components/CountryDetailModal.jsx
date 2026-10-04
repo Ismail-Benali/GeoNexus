@@ -493,7 +493,7 @@ function LiveStats({ title, icon: Icon, tone = 'sky', entries, lang, busy, note 
           <div key={e.id} className="nx-row text-xs">
             <span className="shrink-0 text-slate-500">{isAr ? e.ar : e.en}</span>
             <span className="min-w-0 text-end font-semibold break-words text-slate-200">
-              {formatStat(e, e.format, lang)}
+              {formatStat(e, e.format)}
               {e.year ? (
                 <span className="ms-1.5 text-[10px] font-normal text-slate-500">({e.year})</span>
               ) : null}

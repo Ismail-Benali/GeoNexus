@@ -16,6 +16,9 @@ const SPEED_PX_PER_SEC = 80;
 const MIN_DURATION_S = 45;
 const MAX_DURATION_S = 260;
 
+// نثبّت اللغة هنا صراحةً، وإلا عرض المتصفح العربي الوقت بأرقام هندية (٤:٠٧).
+const TIME_LOCALE = 'en-GB';
+
 export default function NewsTickerBar({ tickerItems, lang }) {
   const isAr = lang === 'ar';
   const [items, setItems] = useState(tickerItems);
@@ -91,7 +94,11 @@ export default function NewsTickerBar({ tickerItems, lang }) {
   );
 
   const sourceLabel = live
-    ? `${source ?? 'live'} · ${updatedAt?.toLocaleTimeString()}`
+    ? `${source ?? 'live'} · ${updatedAt?.toLocaleTimeString(TIME_LOCALE, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })}`
     : isAr
       ? 'مصدر احتياطي'
       : 'fallback feed';

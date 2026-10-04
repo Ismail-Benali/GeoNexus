@@ -183,31 +183,42 @@ async function fetchIndicator(iso2, indicator, signal) {
   }
 }
 
+/**
+ * تنسيق الرقم حسب نوعه.
+ *
+ * نستخدم en-US لكل الأرقام عمداً، حتى في الواجهة العربية:
+ *   - الأرقام الهندية (٠١٢٣) تبطئ قراءة المقارنة بين الدول،
+ *     والمستخدم طلب أرقاماً عادية.
+ *   - صفّ Defense Budget في نفس التبويب يعرض الميزانية بصيغة $2.4B،
+ *     فلو استخدمنا ar-EG لصار الرقم بجواره "2.4 مليار US$"
+ *     أي خليط مربك في نفس الشاشة.
+ */
+const NUMBER_LOCALE = 'en-US';
+
 /** تنسيق الرقم حسب نوعه مع إبقاء اللغة حسب واجهة المستخدم. */
-export function formatStat(entry, format, lang) {
+export function formatStat(entry, format) {
   if (!entry) return null;
-  const locale = lang === 'ar' ? 'ar-EG' : 'en-US';
   const { value } = entry;
   try {
     switch (format) {
       case 'usd':
-        return new Intl.NumberFormat(locale, {
+        return new Intl.NumberFormat(NUMBER_LOCALE, {
           style: 'currency',
           currency: 'USD',
           notation: 'compact',
           maximumFractionDigits: 1,
         }).format(value);
       case 'percent':
-        return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value)}%`;
+        return `${new Intl.NumberFormat(NUMBER_LOCALE, { maximumFractionDigits: 1 }).format(value)}%`;
       case 'count':
-        return new Intl.NumberFormat(locale, {
+        return new Intl.NumberFormat(NUMBER_LOCALE, {
           notation: 'compact',
           maximumFractionDigits: 1,
         }).format(value);
       case 'index':
-        return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
+        return new Intl.NumberFormat(NUMBER_LOCALE, { maximumFractionDigits: 1 }).format(value);
       default:
-        return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
+        return new Intl.NumberFormat(NUMBER_LOCALE, { maximumFractionDigits: 2 }).format(value);
     }
   } catch {
     return `${value}`;
