@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, Globe2 } from 'lucide-react';
 import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
+import { translateText } from '../utils/translator';
 
 export default function DashboardSidebar({
   data,
@@ -24,19 +25,21 @@ export default function DashboardSidebar({
 
   const list = useMemo(() => {
     const q = filter.trim().toLowerCase();
+    const qAlt = translateText(q, isAr ? 'ar' : 'en').toLowerCase();
     const rows = data.countries.filter((c) => {
       const byContinent = selectedContinent === 'all' || c.continent === selectedContinent;
       if (!byContinent) return false;
       const byRegion = region === 'all' || c.region === region;
       if (!byRegion) return false;
       if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.capital.toLowerCase().includes(q) ||
-        c.leader.toLowerCase().includes(q) ||
-        c.regionLabel.toLowerCase().includes(q) ||
-        c.topCompanies.some((comp) => comp.name.toLowerCase().includes(q))
-      );
+      const textMatches = (term) =>
+        c.name.toLowerCase().includes(term) ||
+        c.capital.toLowerCase().includes(term) ||
+        c.leader.toLowerCase().includes(term) ||
+        c.regionLabel.toLowerCase().includes(term) ||
+        c.topCompanies.some((comp) => comp.name.toLowerCase().includes(term));
+
+      return textMatches(q) || (qAlt && textMatches(qAlt));
     });
 
     const sorted = [...rows];

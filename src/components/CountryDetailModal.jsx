@@ -14,6 +14,7 @@ import {
 import { CountryEmblem } from './CountrySymbols';
 import { getFlagUrl } from '../utils/countrySymbols';
 import { fetchCountryStats, formatStat } from '../services/worldbank.js';
+import { translateText } from '../utils/translator';
 
 const TABS = [
   { id: 'overview', icon: Landmark },
@@ -71,6 +72,12 @@ export default function CountryDetailModal({ country, lang, onClose }) {
 
   if (!country) return null;
 
+  const localizedCountryName = translateText(country.name, lang);
+  const localizedCapital = translateText(country.capital, lang);
+  const localizedLeader = translateText(country.leader, lang);
+  const localizedRegion = translateText(country.regionLabel, lang);
+  const localizedRegime = translateText(country.regime, lang);
+
   const labels = {
     overview: isAr ? 'النبذة' : 'Overview',
     military: isAr ? 'الجيش' : 'Military',
@@ -97,7 +104,7 @@ export default function CountryDetailModal({ country, lang, onClose }) {
               {/* شعار الدولة الرسمي */}
               <div
                 className="relative grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-amber-500/35 bg-gradient-to-b from-amber-500/15 via-slate-900/90 to-slate-950 p-1.5 shadow-lg backdrop-blur"
-                title={isAr ? `شعار ${country.name} الرسمي` : `Official Coat of Arms of ${country.name}`}
+                title={isAr ? `شعار ${localizedCountryName} الرسمي` : `Official Coat of Arms of ${localizedCountryName}`}
               >
                 <CountryEmblem country={country} className="h-full w-full" />
               </div>
@@ -108,7 +115,7 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                   <div className="h-5 w-8 overflow-hidden rounded border border-slate-700 shadow-sm bg-slate-900 shrink-0">
                     <img
                       src={getFlagUrl(country.id)}
-                      alt={isAr ? `راية ${country.name}` : `Flag of ${country.name}`}
+                      alt={isAr ? `راية ${localizedCountryName}` : `Flag of ${localizedCountryName}`}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -119,17 +126,19 @@ export default function CountryDetailModal({ country, lang, onClose }) {
                     <span style={{ display: 'none' }} className="text-sm text-center leading-5">{country.flag}</span>
                   </div>
                   <h2 className="font-display m-0 truncate text-xl font-black text-white sm:text-2xl">
-                    {country.name}
+                    {localizedCountryName}
                   </h2>
                 </div>
                 <p className="m-0 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
                   <span>
-                    {isAr ? 'العاصمة' : 'Capital'}: <b className="text-slate-200">{country.capital}</b>
+                    {isAr ? 'العاصمة' : 'Capital'}: <b className="text-slate-200">{localizedCapital}</b>
                   </span>
                   <span className="h-1 w-1 rounded-full bg-slate-600" />
-                  <span>{country.leader}</span>
+                  <span>{localizedLeader}</span>
                   <span className="h-1 w-1 rounded-full bg-slate-600" />
-                  <span className="text-sky-400 font-medium">{country.regionLabel}</span>
+                  <span className="text-sky-400 font-medium">{localizedRegion}</span>
+                  <span className="h-1 w-1 rounded-full bg-slate-600" />
+                  <span className="text-amber-300 font-medium">{localizedRegime}</span>
                 </p>
               </div>
             </div>
@@ -145,18 +154,21 @@ export default function CountryDetailModal({ country, lang, onClose }) {
           {/* Alliances */}
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <Network className="h-3.5 w-3.5 shrink-0 text-sky-400" />
-            {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a, i) => (
-              <span
-                key={`${a}-${i}`}
-                className="nx-chip max-w-[16rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
-                title={a}
-              >
-                <span className="truncate">{a}</span>
-              </span>
-            ))}
+            {country.alliances.slice(0, ALLIANCE_CHIP_LIMIT).map((a, i) => {
+              const localizedAlliance = translateText(a, lang);
+              return (
+                <span
+                  key={`${a}-${i}`}
+                  className="nx-chip max-w-[16rem] border border-sky-500/25 bg-sky-500/10 text-sky-200"
+                  title={localizedAlliance}
+                >
+                  <span className="truncate">{localizedAlliance}</span>
+                </span>
+              );
+            })}
             {country.alliances.length > ALLIANCE_CHIP_LIMIT && (
               <span
-                title={country.alliances.join(' · ')}
+                title={country.alliances.map(a => translateText(a, lang)).join(' · ')}
                 className="nx-chip cursor-default border border-slate-700 bg-slate-900 text-slate-400"
               >
                 +{country.alliances.length - ALLIANCE_CHIP_LIMIT}

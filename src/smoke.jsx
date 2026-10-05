@@ -6,7 +6,17 @@ import AnalyticsPanel from './components/AnalyticsPanel.jsx';
 import IntelligenceBriefing from './components/IntelligenceBriefing.jsx';
 import SearchModal from './components/SearchModal.jsx';
 import CountryDetailModal from './components/CountryDetailModal.jsx';
+import CountryTrendChart from './components/CountryTrendChart.jsx';
+import NetworkRelationsChart from './components/NetworkRelationsChart.jsx';
+import MilitaryReadinessCard from './components/MilitaryReadinessCard.jsx';
+import EconomicIndicatorsSection from './components/EconomicIndicatorsSection.jsx';
+import HotspotsPanel from './components/HotspotsPanel.jsx';
+import CountrySidePanel from './components/CountrySidePanel.jsx';
+import GlobalIntelligenceStream from './components/GlobalIntelligenceStream.jsx';
+import AllianceAnalyticsSection from './components/AllianceAnalyticsSection.jsx';
+import HistoricalArchivePanel from './components/HistoricalArchivePanel.jsx';
 import NewsTickerBar from './components/NewsTickerBar.jsx';
+import { LeadershipProvider } from './context/LeadershipContext.jsx';
 
 const ar = geopoliticalData.ar;
 const en = geopoliticalData.en;
@@ -31,8 +41,42 @@ add('NewsTickerBar', <NewsTickerBar tickerItems={ar.newsTicker} lang="ar" />);
 const detailed = ar.countries.filter((c) => c.detailed);
 const basic = ar.countries.filter((c) => !c.detailed);
 
+add('CountryTrendChart(gdp)', <CountryTrendChart country={detailed[0]} lang="ar" />);
+add('CountryTrendChart(pop)', <CountryTrendChart country={detailed[0]} lang="en" />);
+add('NetworkRelationsChart(ar)', <NetworkRelationsChart country={detailed[0]} lang="ar" />);
+add('NetworkRelationsChart(en)', <NetworkRelationsChart country={detailed[1]} lang="en" />);
+add('MilitaryReadinessCard(ar)', <MilitaryReadinessCard country={detailed[0]} lang="ar" />);
+add('MilitaryReadinessCard(en)', <MilitaryReadinessCard country={detailed[1]} lang="en" />);
+add('EconomicIndicatorsSection(ar)', <EconomicIndicatorsSection country={detailed[0]} lang="ar" />);
+add('EconomicIndicatorsSection(en)', <EconomicIndicatorsSection country={detailed[1]} lang="en" />);
+add('HotspotsPanel(ar)', <HotspotsPanel lang="ar" onFocusOnMap={noop} />);
+add('HotspotsPanel(en)', <HotspotsPanel lang="en" onFocusOnMap={noop} />);
+add('GlobalStream(ar)', <GlobalIntelligenceStream lang="ar" />);
+add('GlobalStream(en)', <GlobalIntelligenceStream lang="en" />);
+add('AllianceAnalytics(ar)', <AllianceAnalyticsSection lang="ar" onSelectCountry={noop} />);
+add('AllianceAnalytics(en)', <AllianceAnalyticsSection lang="en" onSelectCountry={noop} />);
+add('HistoricalArchive(ar)', <HistoricalArchivePanel lang="ar" onFocusOnMap={noop} />);
+add('HistoricalArchive(en)', <HistoricalArchivePanel lang="en" onFocusOnMap={noop} />);
+add(
+  'CountrySidePanel(ar)',
+  <LeadershipProvider>
+    <CountrySidePanel country={detailed[0]} lang="ar" onClose={noop} onOpenFullDossier={noop} onOpenTrendChart={noop} />
+  </LeadershipProvider>,
+);
+add(
+  'CountrySidePanel(en)',
+  <LeadershipProvider>
+    <CountrySidePanel country={detailed[1]} lang="en" onClose={noop} onOpenFullDossier={noop} onOpenTrendChart={noop} />
+  </LeadershipProvider>,
+);
+
 for (const c of [...detailed.slice(0, 3), ...basic.slice(0, 3)]) {
-  add(`CountryModal:${c.id}:${c.detailed ? 'full' : 'basic'}`, <CountryDetailModal country={c} lang="ar" onClose={noop} />);
+  add(
+    `CountryModal:${c.id}:${c.detailed ? 'full' : 'basic'}`,
+    <LeadershipProvider>
+      <CountryDetailModal country={c} lang="ar" onClose={noop} />
+    </LeadershipProvider>,
+  );
 }
 
 let failed = 0;

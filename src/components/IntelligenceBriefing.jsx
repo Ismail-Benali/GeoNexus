@@ -1,8 +1,10 @@
-import { TrendingUp, Flame, Zap, ShieldAlert, Users } from 'lucide-react';
+import { TrendingUp, Flame, ShieldAlert, Anchor, ShieldCheck, Radio, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { getFlagUrl } from '../utils/countrySymbols';
+import { HOTSPOTS_DATA } from '../data/hotspotsData';
 
-export default function IntelligenceBriefing({ lang, countries }) {
+export default function IntelligenceBriefing({ lang, countries, onOpenStream, onOpenArchive }) {
   const isAr = lang === 'ar';
+  const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
 
   const totalSpend = countries.reduce((sum, c) => sum + (c.militaryBudgetBn || 0), 0);
   const withBudget = countries.filter((c) => c.militaryBudgetBn > 0).length;
@@ -28,32 +30,20 @@ export default function IntelligenceBriefing({ lang, countries }) {
     },
   ];
 
-  const hotspots = [
-    {
-      icon: Flame,
-      tone: 'rose',
-      title: isAr ? 'شرق أوروبا وأوكرانيا' : 'Eastern Europe & Ukraine',
-      body: isAr
-        ? 'استمرار إعادة التموضع العسكري وتدفقات العقوبات الاقتصادية.'
-        : 'Ongoing force repositioning and sanctions flows.',
-    },
-    {
-      icon: Users,
-      tone: 'sky',
-      title: isAr ? 'توسع بريكس وتوازن التجارة' : 'BRICS expansion & trade rebalancing',
-      body: isAr
-        ? 'تعزيز التجارة بالعملات المحلية وتقليل الاعتماد على الدولار.'
-        : 'Local-currency settlement and reduced dollar reliance.',
-    },
-    {
-      icon: Zap,
-      tone: 'amber',
-      title: isAr ? 'أمن الطاقة في الخليج' : 'Gulf energy security',
-      body: isAr
-        ? 'أرامكو وأدنوك وربط الاستثمارات بالسلاسل اللوجستية.'
-        : 'Aramco, ADNOC and supply-chain-backed investment.',
-    },
-  ];
+  const hotspots = HOTSPOTS_DATA.slice(0, 5).map((item) => {
+    const isWar = item.category === 'war';
+    const isAlliance = item.category === 'alliance';
+    const isChokepoint = item.category === 'chokepoint';
+
+    return {
+      icon: isWar ? Flame : isAlliance ? ShieldCheck : isChokepoint ? Anchor : ShieldAlert,
+      tone: isWar ? 'rose' : isAlliance ? 'emerald' : isChokepoint ? 'amber' : 'sky',
+      title: isAr ? item.titleAr : item.titleEn,
+      body: isAr ? item.descriptionAr : item.descriptionEn,
+      status: isAr ? item.statusAr : item.statusEn,
+      location: isAr ? item.locationAr : item.locationEn,
+    };
+  });
 
   return (
     <div className="nx-brief space-y-4">
@@ -82,6 +72,45 @@ export default function IntelligenceBriefing({ lang, countries }) {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* روابط سريعة للبث المباشر والأرشيف */}
+      <div className="grid grid-cols-2 gap-2">
+        {onOpenStream && (
+          <button
+            onClick={onOpenStream}
+            className="flex flex-col gap-1.5 rounded-xl border border-rose-500/30 bg-rose-950/20 p-2.5 text-start transition hover:border-rose-500/60 hover:bg-rose-950/35"
+          >
+            <span className="flex items-center justify-between text-rose-400">
+              <Radio className="h-4 w-4 animate-pulse" />
+              <ArrowIcon className="h-3.5 w-3.5" />
+            </span>
+            <span className="text-xs font-bold text-white leading-tight">
+              {isAr ? 'البث الإخباري الحي' : 'Live News Stream'}
+            </span>
+            <span className="text-[10px] text-slate-400 truncate">
+              {isAr ? 'الجزيرة · BBC · DW' : 'BBC · DW · Al Jazeera'}
+            </span>
+          </button>
+        )}
+
+        {onOpenArchive && (
+          <button
+            onClick={onOpenArchive}
+            className="flex flex-col gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-2.5 text-start transition hover:border-indigo-500/60 hover:bg-indigo-950/35"
+          >
+            <span className="flex items-center justify-between text-indigo-400">
+              <Clock className="h-4 w-4" />
+              <ArrowIcon className="h-3.5 w-3.5" />
+            </span>
+            <span className="text-xs font-bold text-white leading-tight">
+              {isAr ? 'الأرشيف التاريخي' : 'Historical Archive'}
+            </span>
+            <span className="text-[10px] text-slate-400 truncate">
+              {isAr ? 'سجل الأزمات والتحولات' : 'Timeline 2022-2026'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Hotspots */}

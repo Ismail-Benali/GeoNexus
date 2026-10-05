@@ -1,11 +1,15 @@
-import { Globe, Search, Languages, BarChart3 } from 'lucide-react';
+import { Globe, Search, Languages, BarChart3, Flame, Radio, Shield, Clock } from 'lucide-react';
 
 export default function Navbar({ lang, setLang, onOpenSearch, activeTab, setActiveTab }) {
   const isAr = lang === 'ar';
 
   const tabs = [
     { id: 'map', label: isAr ? 'الخريطة الحية' : 'Live Map', icon: Globe },
-    { id: 'analytics', label: isAr ? 'التحليلات' : 'Analytics', icon: BarChart3 },
+    { id: 'hotspots', label: isAr ? 'بؤر النزاع والحروب' : 'Hotspots & Wars', icon: Flame },
+    { id: 'stream', label: isAr ? 'البث المباشر (BBC · DW · الجزيرة)' : 'Live Stream', icon: Radio, badge: 'LIVE' },
+    { id: 'alliances', label: isAr ? 'التحالفات (NATO · EU · BRICS)' : 'Alliances Matrix', icon: Shield },
+    { id: 'archive', label: isAr ? 'الأرشيف التاريخي' : 'Historical Archive', icon: Clock },
+    { id: 'analytics', label: isAr ? 'التحليلات والمقارنات' : 'Analytics', icon: BarChart3 },
   ];
 
   return (
@@ -49,34 +53,45 @@ export default function Navbar({ lang, setLang, onOpenSearch, activeTab, setActi
 
             <button
               onClick={() => setLang(isAr ? 'en' : 'ar')}
-              aria-label={isAr ? 'English' : 'العربية'}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900/80 px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-slate-800 transition hover:ring-sky-500/40"
+              aria-label={isAr ? 'Switch to English' : 'التحويل إلى العربية'}
+              title={isAr ? 'التحويل الفوري إلى الإنجليزية (بدون تداخل لغوي)' : 'Switch to Arabic (Instant Bi-directional)'}
+              className="group flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-1.5 text-xs font-bold text-slate-200 shadow-sm transition hover:border-sky-500/50 hover:bg-slate-850"
             >
-              <Languages className="h-4 w-4 shrink-0 text-indigo-300" />
-              {isAr ? 'EN' : 'ع'}
+              <Languages className="h-4 w-4 shrink-0 text-sky-400 transition group-hover:rotate-12" />
+              <div className="flex items-center gap-1 font-mono text-[11px]">
+                <span className={`rounded px-1.5 py-0.5 transition ${isAr ? 'bg-sky-600 text-white font-black' : 'text-slate-400'}`}>ع</span>
+                <span className="text-slate-600">/</span>
+                <span className={`rounded px-1.5 py-0.5 transition ${!isAr ? 'bg-sky-600 text-white font-black' : 'text-slate-400'}`}>EN</span>
+              </div>
             </button>
           </div>
 
           {/* Tabs */}
           <nav
             aria-label={isAr ? 'أقسام الموقع' : 'Sections'}
-            className="order-3 flex w-full items-center gap-1 rounded-xl border border-slate-800 bg-slate-900/80 p-1 sm:w-auto lg:order-2 lg:w-auto lg:flex-1 lg:justify-center"
+            className="order-3 flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/80 p-1 sm:w-auto lg:order-2 lg:w-auto lg:flex-1 lg:justify-center"
           >
-            {tabs.map(({ id, label, icon: Icon }) => {
+            {tabs.map(({ id, label, icon: Icon, badge }) => {
               const active = activeTab === id;
               return (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition lg:flex-none ${
+                  className={`flex shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
                     active
                       ? 'bg-sky-600 text-white shadow shadow-sky-600/25'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {label}
+                  <span>{label}</span>
+                  {badge && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                    </span>
+                  )}
                 </button>
               );
             })}

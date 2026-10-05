@@ -9,6 +9,7 @@ import { EUROPE } from './core/europe.js';
 import { AMERICAS, OCEANIA } from './core/americas.js';
 import { buildCountry, TITLES, REGIMES, REGIONS, ALLIANCES as ALLIANCES_BASE } from './schema.js';
 import { DOSSIERS } from './dossiers.js';
+import { getCountryPartiesData } from './partiesRegistry.js';
 
 const RAW = [
   ...AFRICA.map((r) => buildCountry(r, 'africa')),
@@ -62,6 +63,17 @@ function buildLang(lang) {
     const alliances = ALLIANCES.filter((a) => ids.includes(a.id));
     const cont = CONTINENTS.find((x) => x.id === c.continent);
 
+    const rawParties = d ? t(d.parties) : [];
+    const partyInfo = getCountryPartiesData(
+      {
+        id: c.id,
+        name: t(c.name),
+        regime: t(REGIMES[c.regime]),
+        parties: rawParties,
+      },
+      lang,
+    );
+
     return {
       id: c.id,
       flag: c.flag,
@@ -81,8 +93,11 @@ function buildLang(lang) {
       alliances: alliances.map((a) => t(a)),
       allianceIds: ids,
       detailed: Boolean(d),
-      parties: d ? t(d.parties) : [],
-      rulingParty: d ? t(d.parties)[0] ?? '—' : '—',
+      parties: partyInfo.parties,
+      partiesCount: partyInfo.count,
+      partySystem: partyInfo.system,
+      partiesNote: partyInfo.note,
+      rulingParty: partyInfo.parties[0] ?? '—',
       militaryLeader: d ? t(d.military) : t(TITLES[c.titleKey]),
       topCompanies: d
         ? d.companies.map((co) => ({

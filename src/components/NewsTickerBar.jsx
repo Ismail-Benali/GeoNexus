@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { fetchGeoNews } from '../services/news.js';
+import { translateText } from '../utils/translator.js';
 
 const REFRESH_MS = 10 * 60 * 1000;
 
@@ -53,13 +54,33 @@ export default function NewsTickerBar({ tickerItems, lang }) {
   }, [lang]);
 
   useEffect(() => {
-    loadLiveFeed();
+    let active = true;
+    const fetchFeed = async () => {
+      abortRef.current?.abort();
+      const ac = new AbortController();
+      abortRef.current = ac;
+      try {
+        const { items: live, source: src } = await fetchGeoNews(lang, { signal: ac.signal });
+        if (!active || !live.length) return;
+        setItems(live);
+        setSource(src);
+        setLive(true);
+        setUpdatedAt(new Date());
+      } catch {
+        if (!active) return;
+        setLive(false);
+        setSource(null);
+        setUpdatedAt(null);
+      }
+    };
+    fetchFeed();
     const id = setInterval(loadLiveFeed, REFRESH_MS);
     return () => {
+      active = false;
       clearInterval(id);
       abortRef.current?.abort();
     };
-  }, [loadLiveFeed]);
+  }, [lang, loadLiveFeed]);
 
   const marqueeItems = items.map((item) =>
     typeof item === 'string' ? { key: item, text: item } : item,
@@ -153,11 +174,11 @@ export default function NewsTickerBar({ tickerItems, lang }) {
                       title={item.source || item.text}
                       className="px-4 text-[13px] text-slate-300 transition hover:text-sky-300"
                     >
-                      {item.text}
-                      {item.source ? <span className="text-slate-500"> · {item.source}</span> : null}
+                      {translateText(item.text, lang)}
+                      {item.source ? <span className="text-slate-500"> · {translateText(item.source, lang)}</span> : null}
                     </a>
                   ) : (
-                    <span className="px-4 text-[13px] text-slate-300">{item.text}</span>
+                    <span className="px-4 text-[13px] text-slate-300">{translateText(item.text, lang)}</span>
                   )}
                   <span className="text-slate-700">|</span>
                 </span>

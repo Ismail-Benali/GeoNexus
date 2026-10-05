@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { geopoliticalData } from './data';
 import Navbar from './components/Navbar';
 import NewsTickerBar from './components/NewsTickerBar';
@@ -8,17 +8,28 @@ import CountryDetailModal from './components/CountryDetailModal';
 import SearchModal from './components/SearchModal';
 import DashboardSidebar from './components/DashboardSidebar';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
+import HotspotsPanel from './components/HotspotsPanel';
+import GlobalIntelligenceStream from './components/GlobalIntelligenceStream';
+import AllianceAnalyticsSection from './components/AllianceAnalyticsSection';
+import HistoricalArchivePanel from './components/HistoricalArchivePanel';
+import { LeadershipProvider } from './context/LeadershipContext';
 import { Activity, FileText, Globe2, Radio } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
   const [activeTab, setActiveTab] = useState('map');
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedCountryId, setSelectedCountryId] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState('all');
 
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
+
+  // اشتقاق كائن الدولة النشطة تلقائياً حسب اللغة الحالية لمنع التداخلات اللغوية
+  const activeCountry = useMemo(() => {
+    if (!selectedCountryId) return null;
+    return data.countries.find((c) => c.id === selectedCountryId) || null;
+  }, [selectedCountryId, data.countries]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -41,7 +52,7 @@ export default function App() {
   }, []);
 
   const handleSelectCountry = useCallback((country) => {
-    setSelectedCountry((prev) => (prev?.id === country?.id ? null : country));
+    setSelectedCountryId((prevId) => (prevId === country?.id ? null : country?.id ?? null));
   }, []);
 
   const stats = [
@@ -72,7 +83,8 @@ export default function App() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <LeadershipProvider>
+      <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <Navbar
         lang={lang}
         setLang={setLang}
@@ -155,7 +167,7 @@ export default function App() {
                 onSelectCountry={handleSelectCountry}
                 selectedContinent={selectedContinent}
                 setSelectedContinent={setSelectedContinent}
-                activeCountryId={selectedCountry?.id}
+                activeCountryId={activeCountry?.id}
               />
             </div>
 
@@ -164,15 +176,38 @@ export default function App() {
                 data={data}
                 lang={lang}
                 onSelectCountry={handleSelectCountry}
-                onClearSelection={() => setSelectedCountry(null)}
-                focusCountry={selectedCountry}
+                onClearSelection={() => setSelectedCountryId(null)}
+                focusCountry={activeCountry}
               />
             </div>
 
             <div className="min-w-0 xl:col-span-3">
-              <IntelligenceBriefing lang={lang} countries={data.countries} />
+              <IntelligenceBriefing
+                lang={lang}
+                countries={data.countries}
+                onOpenStream={() => setActiveTab('stream')}
+                onOpenArchive={() => setActiveTab('archive')}
+              />
             </div>
           </div>
+        ) : activeTab === 'hotspots' ? (
+          <HotspotsPanel
+            lang={lang}
+            onFocusOnMap={() => {
+              setActiveTab('map');
+            }}
+          />
+        ) : activeTab === 'stream' ? (
+          <GlobalIntelligenceStream lang={lang} />
+        ) : activeTab === 'alliances' ? (
+          <AllianceAnalyticsSection lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'archive' ? (
+          <HistoricalArchivePanel
+            lang={lang}
+            onFocusOnMap={() => {
+              setActiveTab('map');
+            }}
+          />
         ) : (
           <AnalyticsPanel data={data} lang={lang} onSelectCountry={handleSelectCountry} />
         )}
@@ -190,11 +225,11 @@ export default function App() {
         </p>
       </footer>
 
-      {selectedCountry && (
+      {activeCountry && (
         <CountryDetailModal
-          country={selectedCountry}
+          country={activeCountry}
           lang={lang}
-          onClose={() => setSelectedCountry(null)}
+          onClose={() => setSelectedCountryId(null)}
         />
       )}
 
@@ -209,6 +244,7 @@ export default function App() {
           }}
         />
       )}
-    </div>
+      </div>
+    </LeadershipProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Users, Shield, Search, X, CornerDownLeft } from 'lucide-react';
 import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
+import { translateText } from '../utils/translator';
 
 const SORTS = [
   { id: 'name', ar: 'الاسم', en: 'Name' },
@@ -29,11 +30,12 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const qAlt = translateText(q, isAr ? 'ar' : 'en').toLowerCase();
     let rows = data.countries;
 
     if (q) {
-      rows = rows.filter((c) =>
-        [
+      rows = rows.filter((c) => {
+        const fullText = [
           c.name,
           c.capital,
           c.leader,
@@ -46,9 +48,10 @@ export default function SearchModal({ data, lang, onClose, onSelectCountry }) {
           ...c.topCompanies.map((t) => t.sector),
         ]
           .join(' ')
-          .toLowerCase()
-          .includes(q),
-      );
+          .toLowerCase();
+
+        return fullText.includes(q) || (qAlt && fullText.includes(qAlt));
+      });
     }
 
     const sorted = [...rows];

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Users, Building2, Globe2, ChevronDown } from 'lucide-react';
 import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
+import AllianceAnalyticsSection from './AllianceAnalyticsSection';
 
 export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
   const isAr = lang === 'ar';
@@ -32,6 +33,9 @@ export default function AnalyticsPanel({ data, lang, onSelectCountry }) {
 
   return (
     <div className="space-y-6">
+      {/* مصفوفة التحالفات المعمقة مع المخططات والشعارات */}
+      <AllianceAnalyticsSection lang={lang} onSelectCountry={onSelectCountry} />
+
       {/* Alliances */}
       <section>
         <h2 className="font-display mb-3 flex items-center gap-2 text-base font-black text-white">
