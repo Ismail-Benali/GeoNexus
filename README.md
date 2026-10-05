@@ -2,6 +2,8 @@
 
 **Global Geopolitical & Intelligence Platform**
 **منصة جيوسياسية واستخباراتية عالمية**
+<img width="720" height="470" alt="GeoNexus-Logo" src="https://github.com/user-attachments/assets/81ac7a64-a110-494d-91ad-b72ece5d2f54" />
+
 
 [![Live Demo](https://img.shields.io/badge/live-ismail--benali.github.io-2ea44f)](https://ismail-benali.github.io/GeoNexus/)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev)
