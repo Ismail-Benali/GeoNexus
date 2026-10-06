@@ -12,6 +12,7 @@ import HotspotsPanel from './components/HotspotsPanel';
 import GlobalIntelligenceStream from './components/GlobalIntelligenceStream';
 import AllianceAnalyticsSection from './components/AllianceAnalyticsSection';
 import HistoricalArchivePanel from './components/HistoricalArchivePanel';
+import TimelineSlider from './components/TimelineSlider';
 import { LeadershipProvider } from './context/LeadershipContext';
 import { Activity, FileText, Globe2, Radio } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export default function App() {
   const [selectedCountryId, setSelectedCountryId] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState('all');
+  const [selectedYear, setSelectedYear] = useState(2026);
 
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
@@ -172,12 +174,19 @@ export default function App() {
             </div>
 
             <div className="min-w-0 space-y-4 xl:col-span-6">
+              <TimelineSlider
+                lang={lang}
+                selectedYear={selectedYear}
+                onYearChange={setSelectedYear}
+              />
+
               <MapComponent
                 data={data}
                 lang={lang}
                 onSelectCountry={handleSelectCountry}
                 onClearSelection={() => setSelectedCountryId(null)}
                 focusCountry={activeCountry}
+                selectedYear={selectedYear}
               />
             </div>
 

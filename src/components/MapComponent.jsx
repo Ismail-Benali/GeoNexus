@@ -15,24 +15,47 @@ import {
   Navigation,
   Crosshair,
   Compass,
+  Clock,
   Radar,
   Radio,
   ExternalLink,
   ShieldAlert,
   Search,
   Sparkles,
+  Anchor,
+  Zap,
 } from 'lucide-react';
 import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
 import { useLeadership } from '../context/useLeadership';
 import { HOTSPOTS_DATA, HOTSPOT_CATEGORIES } from '../data/hotspotsData';
+import {
+  MILITARY_BASES_DATA,
+  CHOKEPOINTS_DATA,
+  ENERGY_AND_CABLE_CORRIDORS,
+} from '../data/tacticalMapData';
 import { translateText } from '../utils/translator';
+import { getEraForYear } from '../data/historicalTimelineEras.js';
 import CountryTrendChart from './CountryTrendChart';
 import CountrySidePanel from './CountrySidePanel';
 
-// طبقات الخرائط التكتيكية عالية الدقة والمجانية ومفتوحة المصدر
+// طبقات الخرائط التكتيكية عالية الدقة ومفتوحة المصدر (مع اعتماد OpenStreetMap كأساس رئيسي)
 const TILE_LAYERS = {
+  osm: {
+    labelAr: 'أوبن ستريت (OpenStreetMap)',
+    labelEn: 'OpenStreetMap Standard',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    maxZoom: 19,
+    icon: Globe,
+  },
+  osm_hot: {
+    labelAr: 'أوبن ستريت التكتيكية',
+    labelEn: 'OSM Humanitarian',
+    url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    maxZoom: 19,
+    icon: Navigation,
+  },
   dark: {
-    labelAr: 'تكتيكي داكن (موصى به)',
+    labelAr: 'تكتيكي داكن',
     labelEn: 'Tactical Dark',
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     maxZoom: 19,
@@ -43,21 +66,7 @@ const TILE_LAYERS = {
     labelEn: 'Satellite Earth',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     maxZoom: 18,
-    icon: Globe,
-  },
-  topo: {
-    labelAr: 'تضاريس وعرة',
-    labelEn: 'Tactical Topo',
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    maxZoom: 17,
     icon: Layers,
-  },
-  osm: {
-    labelAr: 'خريطة سياسية',
-    labelEn: 'Political Map',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    maxZoom: 19,
-    icon: Navigation,
   },
 };
 
@@ -131,6 +140,94 @@ function createHotspotIcon(item, lang = 'ar') {
   });
 }
 
+function createBaseIcon(base, lang = 'ar') {
+  const isAr = lang === 'ar';
+  const title = isAr ? base.nameAr : base.nameEn;
+  const isAir = base.type === 'air';
+  const isNaval = base.type === 'naval';
+  const color = isAir ? '#38bdf8' : isNaval ? '#6366f1' : '#a855f7';
+
+  // SVG أيقونة تكتيكية للقاعدة
+  let iconSvg = '';
+  if (isAir) {
+    // طائرة مقاتلة / جناح جوي
+    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z"/></svg>`;
+  } else if (isNaval) {
+    // مرساة بحرية / أسطول
+    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>`;
+  } else {
+    // قاعدة عسكرية مشتركة
+    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+
+  return L.divIcon({
+    className: 'nx-tactical-base-pin',
+    html: `
+      <div style="position: relative; width: 34px; height: 34px; display: grid; place-items: center;" title="${title}">
+        <span style="position: absolute; width: 100%; height: 100%; border-radius: 8px; background-color: ${color}; opacity: 0.35; animation: pulse 2s infinite;"></span>
+        <div style="position: relative; width: 28px; height: 28px; border-radius: 8px; background-color: #020617; border: 2px solid ${color}; display: grid; place-items: center; box-shadow: 0 0 12px ${color}80;">
+          ${iconSvg}
+        </div>
+      </div>
+    `,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -18],
+  });
+}
+
+function createChokepointMarkerIcon(cp, lang = 'ar') {
+  const isAr = lang === 'ar';
+  const title = isAr ? cp.nameAr : cp.nameEn;
+  const isHighRisk = cp.riskTone === 'rose';
+  const color = isHighRisk ? '#f43f5e' : '#f59e0b';
+
+  return L.divIcon({
+    className: 'nx-chokepoint-pin',
+    html: `
+      <div style="position: relative; width: 36px; height: 36px; display: grid; place-items: center;" title="${title}">
+        <span style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${color}; opacity: 0.45; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+        <div style="position: relative; width: 30px; height: 30px; border-radius: 50%; background-color: #020617; border: 2px solid ${color}; display: grid; place-items: center; box-shadow: 0 0 16px ${color};">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 20a6 6 0 0 0 12 0 6 6 0 0 0 10 0"/>
+            <path d="M6 14l2-8h8l2 8"/>
+            <path d="M12 3v3"/>
+          </svg>
+        </div>
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -20],
+  });
+}
+
+function createCorridorIcon(item, lang = 'ar') {
+  const isAr = lang === 'ar';
+  const title = isAr ? item.nameAr : item.nameEn;
+  const isCable = item.type === 'cable';
+  const color = isCable ? '#06b6d4' : '#10b981';
+
+  let iconSvg = isCable
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
+
+  return L.divIcon({
+    className: 'nx-corridor-pin',
+    html: `
+      <div style="position: relative; width: 32px; height: 32px; display: grid; place-items: center;" title="${title}">
+        <span style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${color}; opacity: 0.35; animation: pulse 2.2s infinite;"></span>
+        <div style="position: relative; width: 26px; height: 26px; border-radius: 50%; background-color: #020617; border: 2px solid ${color}; display: grid; place-items: center; box-shadow: 0 0 12px ${color}80;">
+          ${iconSvg}
+        </div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  });
+}
+
 // متحكم الانتقال السلس إلى المسارح والدول
 function MapFocus({ country, theater }) {
   const map = useMap();
@@ -172,19 +269,24 @@ function MapHudWatcher({ onUpdate }) {
   return null;
 }
 
-export default function MapComponent({ data, lang, onSelectCountry, onClearSelection, focusCountry }) {
+export default function MapComponent({ data, lang, onSelectCountry, onClearSelection, focusCountry, selectedYear = 2026 }) {
   const isAr = lang === 'ar';
   const { getLeader } = useLeadership();
   const mapContainerRef = useRef(null);
 
-  // الطبقة الافتراضية داكنة تكتيكية بصرية احترافية
-  const [baseLayer, setBaseLayer] = useState('dark');
+  // الطبقة الافتراضية المعتمدة هي أوبن ستريت (OpenStreetMap)
+  const [baseLayer, setBaseLayer] = useState('osm');
   const [showHotspots, setShowHotspots] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showBases, setShowBases] = useState(true);
+  const [showChokepoints, setShowChokepoints] = useState(true);
+  const [showCorridors, setShowCorridors] = useState(true);
   const [heatIntensity, setHeatIntensity] = useState('high'); // 'standard' | 'high' | 'ultra'
   const [activeTheater, setActiveTheater] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [quickSearchQuery, setQuickSearchQuery] = useState('');
+
+  const currentEra = useMemo(() => getEraForYear(selectedYear), [selectedYear]);
 
   // إحداثيات الـ HUD الحية
   const [hudCoords, setHudCoords] = useState({ lat: '22.00', lng: '12.00', zoom: 2 });
@@ -203,6 +305,21 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
 
   const hotspotIcons = useMemo(
     () => Object.fromEntries(HOTSPOTS_DATA.map((h) => [h.id, createHotspotIcon(h, lang)])),
+    [lang],
+  );
+
+  const baseIcons = useMemo(
+    () => Object.fromEntries(MILITARY_BASES_DATA.map((b) => [b.id, createBaseIcon(b, lang)])),
+    [lang],
+  );
+
+  const chokepointMarkerIcons = useMemo(
+    () => Object.fromEntries(CHOKEPOINTS_DATA.map((cp) => [cp.id, createChokepointMarkerIcon(cp, lang)])),
+    [lang],
+  );
+
+  const corridorIcons = useMemo(
+    () => Object.fromEntries(ENERGY_AND_CABLE_CORRIDORS.map((cor) => [cor.id, createCorridorIcon(cor, lang)])),
     [lang],
   );
 
@@ -341,6 +458,57 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
               </div>
             )}
           </div>
+
+          {/* تبديل طبقة القواعد العسكرية الاستراتيجية الكبرى */}
+          <button
+            onClick={() => setShowBases((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showBases
+                ? 'border-sky-500/60 bg-sky-500/20 text-sky-300 shadow-sky-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? 'عرض القواعد العسكرية الجوية والبحرية الاستراتيجية' : 'Toggle Strategic Military Bases'}
+          >
+            <Shield className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
+            <span>{isAr ? 'القواعد العسكرية' : 'Military Bases'}</span>
+            <span className="rounded-full bg-slate-900 border border-slate-700 px-1.5 py-0.2 text-[10px] font-mono text-sky-300">
+              {MILITARY_BASES_DATA.length}
+            </span>
+          </button>
+
+          {/* تبديل طبقة المضايق البحرية والممرات الاستراتيجية */}
+          <button
+            onClick={() => setShowChokepoints((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showChokepoints
+                ? 'border-amber-500/60 bg-amber-500/20 text-amber-300 shadow-amber-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? 'عرض المضايق البحرية وممرات تدفق النفط والتجارة العالمية' : 'Toggle Maritime Chokepoints'}
+          >
+            <Anchor className="h-3.5 w-3.5 text-amber-400" />
+            <span>{isAr ? 'المضايق والممرات' : 'Chokepoints'}</span>
+            <span className="rounded-full bg-slate-900 border border-slate-700 px-1.5 py-0.2 text-[10px] font-mono text-amber-300">
+              {CHOKEPOINTS_DATA.length}
+            </span>
+          </button>
+
+          {/* تبديل طبقة خطوط أنابيب الطاقة وكابلات الإنترنت البحرية */}
+          <button
+            onClick={() => setShowCorridors((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showCorridors
+                ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-300 shadow-emerald-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? 'عرض خطوط أنابيب النفط والغاز وكابلات الاتصالات البحرية' : 'Toggle Energy Pipelines & Subsea Cables'}
+          >
+            <Zap className="h-3.5 w-3.5 text-emerald-400" />
+            <span>{isAr ? 'أنابيب وكابلات الطاقة' : 'Energy & Cables'}</span>
+            <span className="rounded-full bg-slate-900 border border-slate-700 px-1.5 py-0.2 text-[10px] font-mono text-emerald-300">
+              {ENERGY_AND_CABLE_CORRIDORS.length}
+            </span>
+          </button>
         </div>
 
         {/* أدوات البحث السريع وإعادة الضبط والشاشة الكاملة */}
@@ -797,6 +965,22 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
                 <span className="text-slate-300">{isAr ? 'بؤر توتر ومضايق (حرارة مرتفعة)' : 'Flashpoints & Chokepoints'}</span>
               </div>
+            </div>
+          )}
+
+          {/* شارة محاكاة العصر التاريخي عند تغيير مؤشر الخط الزمني */}
+          {selectedYear !== 2026 && (
+            <div className="pointer-events-none absolute top-3 start-3 z-[500] max-w-sm rounded-xl border border-sky-500/40 bg-slate-950/95 p-2.5 shadow-2xl backdrop-blur text-xs space-y-1">
+              <div className="flex items-center gap-1.5 text-sky-400 font-bold text-[11px]">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{isAr ? `محاكاة تاريخية: سنة ${selectedYear}` : `Historical Simulation: ${selectedYear}`}</span>
+              </div>
+              <p className="m-0 text-white font-bold text-[11px]">
+                {isAr ? currentEra.titleAr : currentEra.titleEn}
+              </p>
+              <p className="m-0 text-[10px] text-slate-400">
+                {isAr ? currentEra.orderAr : currentEra.orderEn}
+              </p>
             </div>
           )}
 

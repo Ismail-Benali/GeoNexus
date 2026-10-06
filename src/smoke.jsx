@@ -16,6 +16,7 @@ import GlobalIntelligenceStream from './components/GlobalIntelligenceStream.jsx'
 import AllianceAnalyticsSection from './components/AllianceAnalyticsSection.jsx';
 import HistoricalArchivePanel from './components/HistoricalArchivePanel.jsx';
 import NewsTickerBar from './components/NewsTickerBar.jsx';
+import TimelineSlider from './components/TimelineSlider.jsx';
 import { LeadershipProvider } from './context/LeadershipContext.jsx';
 
 const ar = geopoliticalData.ar;
@@ -57,6 +58,8 @@ add('AllianceAnalytics(ar)', <AllianceAnalyticsSection lang="ar" onSelectCountry
 add('AllianceAnalytics(en)', <AllianceAnalyticsSection lang="en" onSelectCountry={noop} />);
 add('HistoricalArchive(ar)', <HistoricalArchivePanel lang="ar" onFocusOnMap={noop} />);
 add('HistoricalArchive(en)', <HistoricalArchivePanel lang="en" onFocusOnMap={noop} />);
+add('TimelineSlider(ar)', <TimelineSlider lang="ar" selectedYear={2026} onYearChange={noop} />);
+add('TimelineSlider(en)', <TimelineSlider lang="en" selectedYear={1949} onYearChange={noop} />);
 add(
   'CountrySidePanel(ar)',
   <LeadershipProvider>
