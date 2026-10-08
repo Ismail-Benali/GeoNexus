@@ -13,8 +13,15 @@ import GlobalIntelligenceStream from './components/GlobalIntelligenceStream';
 import AllianceAnalyticsSection from './components/AllianceAnalyticsSection';
 import HistoricalArchivePanel from './components/HistoricalArchivePanel';
 import TimelineSlider from './components/TimelineSlider';
+import CountryComparisonModal from './components/CountryComparisonModal';
+import OsintLiveFeedPanel from './components/OsintLiveFeedPanel';
+import ArmsDealsExplorer from './components/ArmsDealsExplorer';
+import UnVotingExplorer from './components/UnVotingExplorer';
+import LeadersStatementsExplorer from './components/LeadersStatementsExplorer';
+import DataIngestionPipelinesExplorer from './components/DataIngestionPipelinesExplorer';
+import CurrencyVolatilityDashboard from './components/CurrencyVolatilityDashboard';
 import { LeadershipProvider } from './context/LeadershipContext';
-import { Activity, FileText, Globe2, Radio } from 'lucide-react';
+import { Activity, FileText, Globe2, Radio, Coins, Shield, Crosshair } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
@@ -23,9 +30,18 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState('all');
   const [selectedYear, setSelectedYear] = useState(2026);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [comparisonCountry1, setComparisonCountry1] = useState(null);
+  const [comparisonCountry2, setComparisonCountry2] = useState(null);
 
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
+
+  const handleOpenComparison = useCallback((c1 = null, c2 = null) => {
+    setComparisonCountry1(c1);
+    setComparisonCountry2(c2);
+    setIsComparisonOpen(true);
+  }, []);
 
   // اشتقاق كائن الدولة النشطة تلقائياً حسب اللغة الحالية لمنع التداخلات اللغوية
   const activeCountry = useMemo(() => {
@@ -78,9 +94,9 @@ export default function App() {
     },
     {
       icon: FileText,
-      label: isAr ? 'ملفات تفصيلية' : 'Detailed dossiers',
-      value: `${data.coverage.detailed}/${data.coverage.total}`,
-      tone: 'text-amber-300',
+      label: isAr ? 'ملفات تفصيلية كاملة' : 'Full dossiers',
+      value: `${data.coverage.detailed}/${data.coverage.total} (100%)`,
+      tone: 'text-emerald-400',
     },
   ];
 
@@ -93,6 +109,7 @@ export default function App() {
         onOpenSearch={() => setIsSearchOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        onOpenComparison={handleOpenComparison}
       />
 
       <NewsTickerBar tickerItems={data.newsTicker} lang={lang} />
@@ -129,32 +146,79 @@ export default function App() {
                   </div>
                 ))}
               </div>
+
+              {/* Quick Launch Bar */}
+              <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-400 me-1">
+                  {isAr ? 'المسارات الاستخباراتية:' : 'Quick Navigation:'}
+                </span>
+                <button
+                  onClick={() => setActiveTab('currency')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'currency'
+                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-emerald-500/40 hover:text-emerald-300'
+                  }`}
+                >
+                  <Coins className="h-3 w-3 text-emerald-400" />
+                  <span>{isAr ? 'تقلبات العملات (10 سنوات)' : '10Y FX Volatility'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('alliances')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'alliances'
+                      ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-indigo-500/40 hover:text-indigo-300'
+                  }`}
+                >
+                  <Shield className="h-3 w-3 text-indigo-400" />
+                  <span>{isAr ? 'مصفوفة التحالفات (13 تكتل)' : 'Alliances Matrix (13)'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('arms')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'arms'
+                      ? 'border-rose-500 bg-rose-500/20 text-rose-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-rose-500/40 hover:text-rose-300'
+                  }`}
+                >
+                  <Crosshair className="h-3 w-3 text-rose-400" />
+                  <span>{isAr ? 'صفقات السلاح SIPRI' : 'Arms Deals'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Continent cards */}
             <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:w-[21rem]">
-              {data.continents.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedContinent(c.id);
-                    setActiveTab('map');
-                  }}
-                  className="group rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2.5 text-start transition hover:border-sky-500/40 hover:bg-slate-900"
-                >
-                  <span className="block text-[11px] font-semibold leading-tight break-words text-slate-400">
-                    {c.name}
-                  </span>
-                  <span className="mt-1.5 flex items-baseline gap-1.5">
-                    <span className="font-display text-xl font-black leading-none text-white">
-                      {c.countriesCount}
+              {data.continents.map((c) => {
+                const isSelected = selectedContinent === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedContinent(prev => prev === c.id ? 'all' : c.id);
+                      setActiveTab('map');
+                    }}
+                    className={`group rounded-xl border px-3 py-2.5 text-start transition ${
+                      isSelected
+                        ? 'border-sky-500 bg-sky-950/70 shadow-md ring-1 ring-sky-500/50'
+                        : 'border-slate-800 bg-slate-950/60 hover:border-sky-500/40 hover:bg-slate-900'
+                    }`}
+                  >
+                    <span className={`block text-[11px] font-semibold leading-tight break-words ${isSelected ? 'text-sky-300 font-bold' : 'text-slate-400'}`}>
+                      {c.name}
                     </span>
-                    <span className="text-[10px] leading-none text-slate-500">
-                      {isAr ? 'دولة' : 'nations'}
+                    <span className="mt-1.5 flex items-baseline gap-1.5">
+                      <span className="font-display text-xl font-black leading-none text-white">
+                        {c.countriesCount}
+                      </span>
+                      <span className="text-[10px] leading-none text-slate-500">
+                        {isAr ? 'دولة' : 'nations'}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -187,6 +251,7 @@ export default function App() {
                 onClearSelection={() => setSelectedCountryId(null)}
                 focusCountry={activeCountry}
                 selectedYear={selectedYear}
+                onOpenComparison={handleOpenComparison}
               />
             </div>
 
@@ -199,6 +264,25 @@ export default function App() {
               />
             </div>
           </div>
+        ) : activeTab === 'currency' ? (
+          <CurrencyVolatilityDashboard lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'alliances' ? (
+          <AllianceAnalyticsSection lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'arms' ? (
+          <ArmsDealsExplorer lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'un-votes' ? (
+          <UnVotingExplorer lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'statements' ? (
+          <LeadersStatementsExplorer lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'pipelines' ? (
+          <DataIngestionPipelinesExplorer lang={lang} />
+        ) : activeTab === 'osint' ? (
+          <OsintLiveFeedPanel
+            lang={lang}
+            onFocusOnMap={() => {
+              setActiveTab('map');
+            }}
+          />
         ) : activeTab === 'hotspots' ? (
           <HotspotsPanel
             lang={lang}
@@ -208,8 +292,6 @@ export default function App() {
           />
         ) : activeTab === 'stream' ? (
           <GlobalIntelligenceStream lang={lang} />
-        ) : activeTab === 'alliances' ? (
-          <AllianceAnalyticsSection lang={lang} onSelectCountry={handleSelectCountry} />
         ) : activeTab === 'archive' ? (
           <HistoricalArchivePanel
             lang={lang}
@@ -239,6 +321,23 @@ export default function App() {
           country={activeCountry}
           lang={lang}
           onClose={() => setSelectedCountryId(null)}
+          onOpenComparison={(c) => {
+            handleOpenComparison(c);
+          }}
+        />
+      )}
+
+      {isComparisonOpen && (
+        <CountryComparisonModal
+          countries={data.countries}
+          initialCountry1={comparisonCountry1}
+          initialCountry2={comparisonCountry2}
+          lang={lang}
+          onClose={() => setIsComparisonOpen(false)}
+          onOpenFullCountry={(c) => {
+            setIsComparisonOpen(false);
+            setSelectedCountryId(c?.id);
+          }}
         />
       )}
 

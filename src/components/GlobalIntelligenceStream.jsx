@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Radio,
   RefreshCw,
@@ -6,6 +6,13 @@ import {
   ExternalLink,
   Globe2,
   Sparkles,
+  Play,
+  Pause,
+  Clock,
+  Flame,
+  CheckCircle2,
+  Copy,
+  Share2,
 } from 'lucide-react';
 import { fetchIntelligenceStream, NEWS_SOURCES_META } from '../services/news.js';
 import { translateText } from '../utils/translator.js';
@@ -16,58 +23,120 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
   const [sourceStatus, setSourceStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedSource, setSelectedSource] = useState('all');
+  const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedSentiment, setSelectedSentiment] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  // حالة التحديث التلقائي اللحظي ومؤقت العد التنازلي
+  const [refreshIntervalSec, setRefreshIntervalSec] = useState(60); // 30 | 60 | 120
+  const [secondsRemaining, setSecondsRemaining] = useState(60);
+  const [isAutoRefreshActive, setIsAutoRefreshActive] = useState(true);
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  const timerRef = useRef(null);
 
   const loadStream = useCallback(async () => {
     setLoading(true);
     try {
       const { items, source } = await fetchIntelligenceStream(lang);
-      setNews(items);
-      setSourceStatus(source);
-      setLastUpdated(new Date());
+      if (items && items.length > 0) {
+        setNews(items);
+        setSourceStatus(source);
+        setLastUpdated(new Date());
+      }
     } catch {
-      // Keep existing or fallback
+      // keep fallback
     } finally {
       setLoading(false);
+      setSecondsRemaining(refreshIntervalSec);
     }
-  }, [lang]);
+  }, [lang, refreshIntervalSec]);
+
+  // إدارة التحديث التلقائي الدوري مع مؤقت الثواني
+  useEffect(() => {
+    loadStream();
+  }, [loadStream]);
 
   useEffect(() => {
-    let unmounted = false;
-    const execute = async () => {
-      try {
-        const { items, source } = await fetchIntelligenceStream(lang);
-        if (!unmounted) {
-          setNews(items);
-          setSourceStatus(source);
-          setLastUpdated(new Date());
+    if (!isAutoRefreshActive) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          loadStream();
+          return refreshIntervalSec;
         }
-      } catch {
-        // keep fallback
-      }
-    };
-    execute();
-    const interval = setInterval(execute, 90 * 1000);
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => {
-      unmounted = true;
-      clearInterval(interval);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [lang]);
+  }, [isAutoRefreshActive, refreshIntervalSec, loadStream]);
+
+  const handleCopyLink = (url, key) => {
+    if (!url) return;
+    navigator.clipboard?.writeText(url);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
+
+  const countriesFilterList = [
+    { id: 'all', labelAr: 'كافة الدول', labelEn: 'All Countries' },
+    { id: 'sa', labelAr: 'المملكة العربية السعودية', labelEn: 'Saudi Arabia' },
+    { id: 'eg', labelAr: 'جمهورية مصر العربية', labelEn: 'Egypt' },
+    { id: 'ae', labelAr: 'الإمارات العربية المتحدة', labelEn: 'UAE' },
+    { id: 'qa', labelAr: 'دولة قطر', labelEn: 'Qatar' },
+    { id: 'us', labelAr: 'الولايات المتحدة', labelEn: 'United States' },
+    { id: 'cn', labelAr: 'الصين', labelEn: 'China' },
+    { id: 'ru', labelAr: 'روسيا', labelEn: 'Russia' },
+    { id: 'tr', labelAr: 'تركيا', labelEn: 'Turkey' },
+    { id: 'ir', labelAr: 'إيران', labelEn: 'Iran' },
+    { id: 'gb', labelAr: 'المملكة المتحدة', labelEn: 'United Kingdom' },
+    { id: 'fr', labelAr: 'فرنسا', labelEn: 'France' },
+    { id: 'de', labelAr: 'ألمانيا', labelEn: 'Germany' },
+  ];
 
   const filteredNews = useMemo(() => {
     return news.filter((item) => {
       const matchesSource = selectedSource === 'all' || item.sourceCode === selectedSource;
       const matchesSentiment = selectedSentiment === 'all' || item.sentiment === selectedSentiment;
+
+      // تصفية حسب الدولة
+      let matchesCountry = true;
+      if (selectedCountry !== 'all') {
+        const textLower = (item.text || '').toLowerCase();
+        const cid = selectedCountry;
+        matchesCountry =
+          item.countryKey === cid ||
+          (cid === 'sa' && (textLower.includes('سعود') || textLower.includes('saudi') || textLower.includes('الرياض'))) ||
+          (cid === 'eg' && (textLower.includes('مصر') || textLower.includes('egypt') || textLower.includes('القاهرة'))) ||
+          (cid === 'ae' && (textLower.includes('إمارات') || textLower.includes('uae') || textLower.includes('دبي') || textLower.includes('أبوظبي'))) ||
+          (cid === 'qa' && (textLower.includes('قطر') || textLower.includes('qatar') || textLower.includes('الدوحة'))) ||
+          (cid === 'us' && (textLower.includes('أمريك') || textLower.includes('واشنطن') || textLower.includes('us ') || textLower.includes('بيدن') || textLower.includes('ترامب'))) ||
+          (cid === 'cn' && (textLower.includes('صين') || textLower.includes('china') || textLower.includes('بكين'))) ||
+          (cid === 'ru' && (textLower.includes('روسي') || textLower.includes('russia') || textLower.includes('موسكو') || textLower.includes('بوتين'))) ||
+          (cid === 'tr' && (textLower.includes('تركي') || textLower.includes('turkey') || textLower.includes('أنقرة') || textLower.includes('أردوغان'))) ||
+          (cid === 'ir' && (textLower.includes('إيران') || textLower.includes('iran') || textLower.includes('طهران'))) ||
+          (cid === 'gb' && (textLower.includes('بريطاني') || textLower.includes('uk') || textLower.includes('لندن'))) ||
+          (cid === 'fr' && (textLower.includes('فرنس') || textLower.includes('france') || textLower.includes('باريس'))) ||
+          (cid === 'de' && (textLower.includes('ألمان') || textLower.includes('germany') || textLower.includes('برلين')));
+      }
+
       const matchesSearch =
         !searchQuery ||
         item.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.sourceNameAr && item.sourceNameAr.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.sourceNameEn && item.sourceNameEn.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesSource && matchesSentiment && matchesSearch;
+
+      return matchesSource && matchesSentiment && matchesCountry && matchesSearch;
     });
-  }, [news, selectedSource, selectedSentiment, searchQuery]);
+  }, [news, selectedSource, selectedSentiment, selectedCountry, searchQuery]);
 
   const stats = useMemo(() => {
     return {
@@ -80,9 +149,11 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
     };
   }, [news]);
 
+  const progressPercent = Math.max(0, Math.min(100, ((refreshIntervalSec - secondsRemaining) / refreshIntervalSec) * 100));
+
   return (
     <div className="space-y-5" dir={isAr ? 'rtl' : 'ltr'}>
-      {/* الترويسة الاستخباراتية للبث المباشر */}
+      {/* الترويسة الاستخباراتية للبث الإخباري الحي والأوتوماتيكي */}
       <section className="nx-panel relative overflow-hidden bg-gradient-to-r from-slate-950 via-slate-900 to-sky-950/40 p-5 sm:p-7 border-sky-500/20">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-2 max-w-2xl">
@@ -92,54 +163,99 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
                 </span>
-                {isAr ? 'بث استخباري مباشر (LIVE INTELLIGENCE)' : 'LIVE INTELLIGENCE STREAM'}
+                {isAr ? 'بث استخباري مباشر وتلقائي (AUTO-FETCH LIVE)' : 'AUTO-REFRESHING INTELLIGENCE FEED'}
               </span>
 
               <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-0.5 text-xs font-bold text-sky-300">
                 <Sparkles className="h-3 w-3 text-sky-400" />
-                <span>{isAr ? 'تحليل المشاعر الجيوسياسي (Gemini AI)' : 'Gemini AI Sentiment Tagging'}</span>
+                <span>{isAr ? 'روابط المصادر الرسمية موثقة' : 'Verified Direct Publisher Links'}</span>
               </span>
             </div>
 
             <h2 className="m-0 text-xl font-black text-white sm:text-2xl flex items-center gap-2.5">
               <Radio className="h-6 w-6 text-rose-500 animate-pulse" />
-              <span>{isAr ? 'البث المباشر للأحداث العالمية — الجزيرة، BBC، وDW' : 'Global Intelligence Stream — BBC, DW & Al Jazeera'}</span>
+              <span>
+                {isAr
+                  ? 'مركز الرصد الإخباري الاستخباراتي التلقائي والروابط الرسمية'
+                  : 'Automated Global Intelligence Wire with Direct Verified Links'}
+              </span>
             </h2>
 
             <p className="m-0 text-xs sm:text-sm text-slate-300 leading-relaxed">
               {isAr
-                ? 'رصد ومزامنة فورية على مدار الساعة لجميع الأحداث الجيوسياسية المباشرة من كبرى الشبكات الدولية، مع تحليل ذكاء اصطناعي فوري لدرجة التصعيد ومؤشر المشاعر لكل عنوان.'
-                : 'Real-time aggregated intelligence updates from BBC, DW, and Al Jazeera with AI-powered sentiment analysis and threat classification.'}
+                ? 'جلب وتحديث تلقائي على مدار الساعة لآخر الأنباء والتقارير الجيوسياسية من كبرى الشبكات العالمية مع روابط المصادر الأصلية المباشرة وتحليل المشاعر وتصنيف الدول.'
+                : 'Automated, interval-driven ingestion of world-wide geopolitical wires with direct source links, sentiment tags, and country filters.'}
             </p>
           </div>
 
-          {/* حالة المصادر والتحديث اليدوي */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 text-xs space-y-1">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Globe2 className="h-3.5 w-3.5 text-sky-400" />
-                <span>{isAr ? 'المصادر المتصلة:' : 'Feeds Active:'}</span>
-                <span className="font-bold text-slate-200">{sourceStatus || 'BBC + DW + Al Jazeera'}</span>
+          {/* لوحة التحكم بالمؤقت التلقائي والتحديث اللحظي */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            {/* بطاقة المؤقت التلقائي التفاعلية */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-3 text-xs space-y-2 shadow-inner">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 text-slate-300">
+                  <Clock className="h-3.5 w-3.5 text-sky-400" />
+                  <span className="font-bold">
+                    {isAr ? 'التحديث التلقائي:' : 'Auto Sync:'}
+                  </span>
+                  <span className={`font-mono font-bold ${isAutoRefreshActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    {isAutoRefreshActive ? `${secondsRemaining}s` : (isAr ? 'موقوف' : 'Paused')}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setIsAutoRefreshActive(!isAutoRefreshActive)}
+                    title={isAutoRefreshActive ? (isAr ? 'إيقاف التحديث التلقائي مؤقتاً' : 'Pause Auto-Sync') : (isAr ? 'استئناف التحديث التلقائي' : 'Resume Auto-Sync')}
+                    className="grid h-6 w-6 place-items-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:border-sky-500 transition"
+                  >
+                    {isAutoRefreshActive ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 text-emerald-400" />}
+                  </button>
+
+                  <select
+                    value={refreshIntervalSec}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setRefreshIntervalSec(val);
+                      setSecondsRemaining(val);
+                    }}
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-300 focus:outline-none focus:border-sky-500"
+                  >
+                    <option value={30}>30s</option>
+                    <option value={60}>60s</option>
+                    <option value={120}>120s</option>
+                  </select>
+                </div>
               </div>
-              {lastUpdated && (
-                <div className="text-[10px] text-slate-500 font-mono">
-                  {isAr ? 'آخر تحديث:' : 'Updated:'} {lastUpdated.toLocaleTimeString()}
+
+              {/* شريط التقدم المرئي للثواني */}
+              {isAutoRefreshActive && (
+                <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-1000 ease-linear rounded-full"
+                    style={{ width: `${progressPercent}%` }}
+                  />
                 </div>
               )}
+
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-0.5">
+                <span>{sourceStatus || 'Multi-feed Wires'}</span>
+                {lastUpdated && <span>{lastUpdated.toLocaleTimeString()}</span>}
+              </div>
             </div>
 
             <button
               onClick={loadStream}
               disabled={loading}
-              className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-sky-600/25 transition hover:bg-sky-500 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-3 text-xs font-black text-white shadow-lg shadow-sky-600/30 transition hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>{isAr ? 'تحديث البث الآن' : 'Refresh Feed'}</span>
+              <span>{isAr ? 'تحديث الآن' : 'Refresh Now'}</span>
             </button>
           </div>
         </div>
 
-        {/* شريط الإحصائيات المصنفة */}
+        {/* شريط الإحصائيات المصنفة للأخبار الحية */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-4 mt-4 border-t border-slate-800/80">
           <div className="rounded-xl border border-rose-500/25 bg-rose-950/15 p-2 text-center">
             <span className="text-[10px] font-bold text-rose-300 block">{isAr ? 'تصعيد عسكري' : 'Escalation'}</span>
@@ -164,8 +280,9 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
         </div>
       </section>
 
-      {/* شريط الفلاتر للمصادر والمشاعر */}
-      <div className="space-y-2.5">
+      {/* شريط الفلاتر للمصادر والدول والبحث */}
+      <div className="space-y-3">
+        {/* صف الفلاتر الأول: المصادر الإخبارية وحقل البحث */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* فلاتر المصادر */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
@@ -175,9 +292,13 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
             {[
               { id: 'all', label: isAr ? 'الكل' : 'All' },
               { id: 'aljazeera', label: isAr ? 'الجزيرة' : 'Al Jazeera' },
+              { id: 'reuters', label: isAr ? 'رويترز' : 'Reuters' },
               { id: 'bbc', label: 'BBC' },
               { id: 'dw', label: 'DW' },
               { id: 'france24', label: isAr ? 'فرانس 24' : 'France 24' },
+              { id: 'bloomberg', label: isAr ? 'بلومبرغ' : 'Bloomberg' },
+              { id: 'spa', label: isAr ? 'واس' : 'SPA' },
+              { id: 'wam', label: isAr ? 'وام' : 'WAM' },
             ].map((src) => (
               <button
                 key={src.id}
@@ -193,20 +314,40 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
             ))}
           </div>
 
-          {/* حقل البحث */}
+          {/* حقل البحث اللحظي */}
           <div className="relative min-w-[260px]">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isAr ? 'ابحث في العناوين الحية...' : 'Search live stream...'}
+              placeholder={isAr ? 'ابحث في العناوين والتقارير الحية...' : 'Search live stream headlines...'}
               className="w-full rounded-xl border border-slate-800 bg-slate-900/90 py-2 ps-9 pe-3 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
             />
           </div>
         </div>
 
-        {/* فلاتر تصنيف المشاعر الجيوسياسية */}
+        {/* صف الفلاتر الثاني: تصفية الدولة المستهدفة */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <span className="text-xs font-bold text-slate-400 shrink-0 me-1">
+            {isAr ? 'الدولة:' : 'Country:'}
+          </span>
+          {countriesFilterList.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCountry(c.id)}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition whitespace-nowrap ${
+                selectedCountry === c.id
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700'
+              }`}
+            >
+              {isAr ? c.labelAr : c.labelEn}
+            </button>
+          ))}
+        </div>
+
+        {/* صف الفلاتر الثالث: المشاعر الجيوسياسية */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           <span className="text-xs font-bold text-slate-400 shrink-0 me-1">
             {isAr ? 'نوع الحدث / المشاعر:' : 'Sentiment Tag:'}
@@ -234,26 +375,33 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
         </div>
       </div>
 
-      {/* قائمة البث الإخباري الاستخباري الحي */}
+      {/* قائمة البث الإخباري الاستخباري الحي مع الروابط المباشرة */}
       <div className="space-y-3">
         {loading && news.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-400 space-y-3">
             <RefreshCw className="h-8 w-8 animate-spin text-sky-400 mx-auto" />
-            <p className="m-0 text-sm font-semibold">{isAr ? 'جارٍ الاتصال بروافد الأخبار العالمية وتحليل المشاعر…' : 'Connecting to global intelligence feeds…'}</p>
+            <p className="m-0 text-sm font-semibold">
+              {isAr ? 'جارٍ الاتصال بروافد الأخبار العالمية وتحليل المشاعر التلقائي…' : 'Connecting to global intelligence feeds…'}
+            </p>
           </div>
         ) : filteredNews.length === 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-400">
-            <p className="m-0 text-sm">{isAr ? 'لا توجد نتائج تطابق معايير التصفية الحالية.' : 'No headlines match the selected filters.'}</p>
+            <p className="m-0 text-sm">
+              {isAr ? 'لا توجد عناوين تطابق معايير التصفية الحالية.' : 'No headlines match the selected filters.'}
+            </p>
           </div>
         ) : (
           filteredNews.map((item, idx) => {
             const sentiment = item.sentimentMeta;
+            const itemKey = item.key || item.href || idx;
+            const isCopied = copiedKey === itemKey;
+
             return (
               <article
-                key={item.key || idx}
+                key={itemKey}
                 className="group relative rounded-2xl border border-slate-800/90 bg-gradient-to-b from-slate-900/80 via-slate-900/50 to-slate-950 p-4 transition-all hover:border-sky-500/40 hover:shadow-xl"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* شارة القناة الإخبارية */}
                     <span
@@ -279,10 +427,12 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
                   </div>
 
                   <span className="text-[11px] text-slate-500 font-mono">
-                    {new Date(item.published).toLocaleTimeString(isAr ? 'ar-SA' : 'en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {item.published
+                      ? new Date(item.published).toLocaleTimeString(isAr ? 'ar-SA' : 'en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : (isAr ? 'مباشر الآن' : 'Just Now')}
                   </span>
                 </div>
 
@@ -291,27 +441,46 @@ export default function GlobalIntelligenceStream({ lang = 'ar' }) {
                   {translateText(item.text, lang)}
                 </h3>
 
-                {/* التذييل والرابط المباشر للمقال الأصلي */}
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-800/80 pt-2 text-xs">
-                  <span className="text-[10px] text-slate-500">
-                    {item.analyzedBy && (
-                      <span>
-                        {isAr ? 'التحليل:' : 'Engine:'} <b className="text-slate-400">{item.analyzedBy}</b>
-                      </span>
-                    )}
-                  </span>
+                {/* التذييل والأزرار المباشرة لفتح الرابط في المصدر الأصلي ونسخه */}
+                <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80 pt-2.5 text-xs">
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                    <Globe2 className="h-3 w-3 text-slate-400" />
+                    <span>{item.source || 'Verified Wire'}</span>
+                  </div>
 
-                  {item.href && (
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300 transition text-[11px]"
-                    >
-                      <span>{isAr ? 'قراءة التقرير في المصدر' : 'Read original report'}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.href && (
+                      <button
+                        onClick={() => handleCopyLink(item.href, itemKey)}
+                        title={isAr ? 'نسخ رابط الخبر' : 'Copy article URL'}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-300 hover:text-white hover:border-slate-600 transition"
+                      >
+                        {isCopied ? (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                            <span className="text-emerald-400">{isAr ? 'تم النسخ' : 'Copied'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3 text-slate-400" />
+                            <span>{isAr ? 'نسخ الرابط' : 'Copy'}</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {item.href && (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/15 px-3 py-1 font-bold text-sky-300 hover:bg-sky-500/25 hover:border-sky-400 transition text-[11px] shadow-sm"
+                      >
+                        <span>{isAr ? 'قراءة الخبر في المصدر الأصلي' : 'Open Direct Source Link'}</span>
+                        <ExternalLink className="h-3 w-3 text-sky-300" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </article>
             );

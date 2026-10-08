@@ -269,7 +269,15 @@ function MapHudWatcher({ onUpdate }) {
   return null;
 }
 
-export default function MapComponent({ data, lang, onSelectCountry, onClearSelection, focusCountry, selectedYear = 2026 }) {
+export default function MapComponent({
+  data,
+  lang,
+  onSelectCountry,
+  onClearSelection,
+  focusCountry,
+  selectedYear = 2026,
+  onOpenComparison,
+}) {
   const isAr = lang === 'ar';
   const { getLeader } = useLeadership();
   const mapContainerRef = useRef(null);
@@ -917,6 +925,182 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
                 );
               })}
 
+            {/* علامات القواعد العسكرية الاستراتيجية الكبرى */}
+            {showBases &&
+              MILITARY_BASES_DATA.map((base) => {
+                const icon = baseIcons[base.id];
+                const localizedTitle = isAr ? base.nameAr : base.nameEn;
+                const localizedSignificance = isAr ? base.significanceAr : base.significanceEn;
+                const typeLabel =
+                  base.type === 'air'
+                    ? isAr
+                      ? 'قاعدة جوية استراتيجية'
+                      : 'Strategic Air Base'
+                    : base.type === 'naval'
+                    ? isAr
+                      ? 'قاعدة بحرية ومقر أسطول'
+                      : 'Naval Homeport / Base'
+                    : isAr
+                    ? 'مجمع عسكري مشترك متعدد الفروع'
+                    : 'Joint Military Hub';
+
+                return (
+                  <Marker
+                    key={`base-${base.id}`}
+                    position={base.coordinates}
+                    icon={icon}
+                  >
+                    <Popup className="nx-custom-popup" maxWidth={320}>
+                      <div className="p-1 space-y-2 text-slate-100" dir={isAr ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                          <span className="rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 text-[9px] font-black uppercase text-sky-300">
+                            {typeLabel}
+                          </span>
+                          <span className="flex items-center gap-1 font-mono text-[10px] text-slate-300">
+                            <span>{base.operatorFlag}</span>
+                            <span>{base.country}</span>
+                          </span>
+                        </div>
+
+                        <h4 className="m-0 text-xs font-black text-white leading-tight">
+                          {localizedTitle}
+                        </h4>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-2 text-[10px] space-y-1">
+                          <div>
+                            <span className="font-bold text-sky-400">{isAr ? 'المشغّل:' : 'Operator:'} </span>
+                            <span className="text-slate-200">{base.operator}</span>
+                          </div>
+                          <div>
+                            <span className="font-bold text-amber-400">{isAr ? 'القدرات والعتاد:' : 'Capacity:'} </span>
+                            <span className="text-slate-300">{base.capacity}</span>
+                          </div>
+                        </div>
+
+                        <p className="m-0 text-[11px] leading-relaxed text-slate-300">
+                          {localizedSignificance}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+            {/* علامات المضايق والممرات البحرية الاستراتيجية */}
+            {showChokepoints &&
+              CHOKEPOINTS_DATA.map((cp) => {
+                const icon = chokepointMarkerIcons[cp.id];
+                const localizedTitle = isAr ? cp.nameAr : cp.nameEn;
+                const localizedFlowLabel = isAr ? cp.flowLabelAr : cp.flowLabelEn;
+                const localizedPatrolled = isAr ? cp.patrolledByAr : cp.patrolledByEn;
+                const localizedDetails = isAr ? cp.detailsAr : cp.detailsEn;
+                const isHighRisk = cp.riskTone === 'rose';
+
+                return (
+                  <Marker
+                    key={`chokepoint-${cp.id}`}
+                    position={cp.coordinates}
+                    icon={icon}
+                  >
+                    <Popup className="nx-custom-popup" maxWidth={330}>
+                      <div className="p-1 space-y-2 text-slate-100" dir={isAr ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase ${
+                              isHighRisk
+                                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            }`}
+                          >
+                            {cp.riskLevel}
+                          </span>
+                          <span className="rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-300">
+                            {cp.flow}
+                          </span>
+                        </div>
+
+                        <h4 className="m-0 text-xs font-black text-white leading-tight">
+                          {localizedTitle}
+                        </h4>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-2 text-[10px] space-y-1">
+                          <p className="m-0 font-semibold text-amber-300">
+                            {localizedFlowLabel}
+                          </p>
+                          <div className="text-slate-400 pt-1 border-t border-slate-800">
+                            <span className="font-bold text-slate-300">{isAr ? 'الدوريات والحماية:' : 'Patrolled by:'} </span>
+                            <span>{localizedPatrolled}</span>
+                          </div>
+                        </div>
+
+                        <p className="m-0 text-[11px] leading-relaxed text-slate-300">
+                          {localizedDetails}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+            {/* علامات خطوط الطاقة وكابلات الاتصالات البحرية */}
+            {showCorridors &&
+              ENERGY_AND_CABLE_CORRIDORS.map((cor) => {
+                const icon = corridorIcons[cor.id];
+                const localizedTitle = isAr ? cor.nameAr : cor.nameEn;
+                const localizedDesc = isAr ? cor.descAr : cor.descEn;
+                const localizedOperator = isAr ? cor.operatorAr : cor.operatorEn;
+                const isCable = cor.type === 'cable';
+
+                return (
+                  <Marker
+                    key={`corridor-${cor.id}`}
+                    position={cor.coordinates}
+                    icon={icon}
+                  >
+                    <Popup className="nx-custom-popup" maxWidth={320}>
+                      <div className="p-1 space-y-2 text-slate-100" dir={isAr ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase ${
+                              isCable
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            }`}
+                          >
+                            {isCable
+                              ? isAr
+                                ? 'كابلات بيانات بحرية فائقة'
+                                : 'Subsea Data Cable'
+                              : isAr
+                              ? 'خط أنابيب طاقة استراتيجي'
+                              : 'Energy Pipeline'}
+                          </span>
+                        </div>
+
+                        <h4 className="m-0 text-xs font-black text-white leading-tight">
+                          {localizedTitle}
+                        </h4>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-2 text-[10px] space-y-1">
+                          <div className="font-bold text-emerald-400">
+                            <span>{isAr ? 'السعة / التدفق:' : 'Capacity:'} </span>
+                            <span className="text-slate-200 font-normal">{cor.capacity}</span>
+                          </div>
+                          <div className="text-slate-400">
+                            <span className="font-bold text-slate-300">{isAr ? 'المشغّل:' : 'Operators:'} </span>
+                            <span>{localizedOperator}</span>
+                          </div>
+                        </div>
+
+                        <p className="m-0 text-[11px] leading-relaxed text-slate-300">
+                          {localizedDesc}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
             <MapFocus country={focusCountry} theater={activeTheater} />
             <MapHudWatcher onUpdate={setHudCoords} />
           </MapContainer>
@@ -1016,6 +1200,7 @@ export default function MapComponent({ data, lang, onSelectCountry, onClearSelec
               onClose={handleCloseSidePanel}
               onOpenFullDossier={() => onSelectCountry(sidePanelCountry)}
               onOpenTrendChart={() => setChartCountry(sidePanelCountry)}
+              onOpenComparison={onOpenComparison}
             />
           </div>
         )}

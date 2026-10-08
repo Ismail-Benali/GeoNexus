@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   X,
   History,
@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Maximize2,
   Building,
+  Building2,
   Shield,
   Clock,
   Globe,
@@ -14,6 +15,14 @@ import {
   Activity,
   Network,
   Coins,
+  Swords,
+  Flame,
+  Skull,
+  AlertOctagon,
+  Radio,
+  CheckCircle2,
+  Copy,
+  Sparkles,
 } from 'lucide-react';
 import { CountryFlag, CountryEmblem } from './CountrySymbols';
 import { useLeadership } from '../context/useLeadership';
@@ -25,10 +34,18 @@ import {
 import { calculateStabilityIndex } from '../utils/stabilityIndex';
 import { getMilitaryReadinessData } from '../data/militaryData';
 import { getCountryEconomicData } from '../data/economicData';
+import { getCountryHistoricalEventsData } from '../data/countryHistoricalEventsDB';
+import { getCountryAlliancesData } from '../data/countryAlliancesDB';
+import { getCountryOfficialSources } from '../data/countryOfficialSourcesDB';
+import { getCountryInvestmentsData } from '../data/countryInvestmentsAndCompaniesDB';
+import { getCountryCompanies } from '../data/countryCompaniesDB';
+import { fetchCountryLiveNews } from '../services/news';
 import { translateText } from '../utils/translator';
 import NetworkRelationsChart from './NetworkRelationsChart';
 import MilitaryReadinessCard from './MilitaryReadinessCard';
 import EconomicIndicatorsSection from './EconomicIndicatorsSection';
+import CountryAlliancesSidePanel from './CountryAlliancesSidePanel';
+import CountryCurrency10YearChart from './CountryCurrency10YearChart';
 
 export default function CountrySidePanel({
   country,
@@ -36,10 +53,11 @@ export default function CountrySidePanel({
   onClose,
   onOpenFullDossier,
   onOpenTrendChart,
+  onOpenComparison,
 }) {
   const isAr = lang === 'ar';
   const { getLeader } = useLeadership();
-  const [activeTab, setActiveTab] = useState('military'); // 'military' | 'economy' | 'network' | 'parties' | 'leaders' | 'history'
+  const [activeTab, setActiveTab] = useState('military'); // 'military' | 'alliances' | 'economy' | 'network' | 'parties' | 'leaders' | 'history'
 
   const currentLeader = getLeader(country);
   const rawLeaderName = isAr ? currentLeader?.nameAr || country?.leader : currentLeader?.nameEn || country?.leader;
@@ -57,6 +75,39 @@ export default function CountrySidePanel({
   const stability = useMemo(() => calculateStabilityIndex(country, lang), [country, lang]);
   const militaryData = useMemo(() => getMilitaryReadinessData(country), [country]);
   const economicData = useMemo(() => getCountryEconomicData(country, lang), [country, lang]);
+  const historicalEventsData = useMemo(() => getCountryHistoricalEventsData(country?.id), [country?.id]);
+  const alliancesData = useMemo(() => getCountryAlliancesData(country?.id), [country?.id]);
+  const officialSources = useMemo(() => getCountryOfficialSources(country?.id, lang), [country?.id, lang]);
+  const investmentsData = useMemo(() => getCountryInvestmentsData(country?.id, lang), [country?.id, lang]);
+  const companiesList = useMemo(() => getCountryCompanies(country, lang), [country, lang]);
+
+  const [countryNews, setCountryNews] = useState([]);
+  const [copiedUrl, setCopiedUrl] = useState(null);
+
+  useEffect(() => {
+    let unmounted = false;
+    const fetchNews = async () => {
+      try {
+        const items = await fetchCountryLiveNews(country?.id, country?.name, lang);
+        if (!unmounted && items) {
+          setCountryNews(items);
+        }
+      } catch {
+        // keep fallback
+      }
+    };
+    fetchNews();
+    return () => {
+      unmounted = true;
+    };
+  }, [country?.id, country?.name, lang]);
+
+  const handleCopyLink = (url) => {
+    if (!url) return;
+    navigator.clipboard?.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2500);
+  };
 
   if (!country) return null;
 
@@ -101,6 +152,40 @@ export default function CountrySidePanel({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setActiveTab('alliances')}
+              title={isAr ? 'عرض التحالفات العسكرية والاقتصادية للدولة' : 'View Military & Economic Alliances'}
+              className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
+                activeTab === 'alliances'
+                  ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
+                  : 'border-slate-800 text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/10'
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={() => setActiveTab('economy')}
+              title={isAr ? 'عرض مخطط تقلبات العملة لـ 10 سنوات' : 'View 10-Year Currency Volatility Chart'}
+              className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
+                activeTab === 'economy'
+                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
+                  : 'border-slate-800 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10'
+              }`}
+            >
+              <Coins className="h-4 w-4" />
+            </button>
+
+            {onOpenComparison && (
+              <button
+                onClick={() => onOpenComparison(country)}
+                title={isAr ? 'مقارنة هذه الدولة مع دولة أخرى' : 'Compare with another country'}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-slate-800 text-amber-400 hover:border-amber-500/50 hover:bg-amber-500/10 transition"
+              >
+                <Swords className="h-4 w-4" />
+              </button>
+            )}
+
             {onOpenFullDossier && (
               <button
                 onClick={onOpenFullDossier}
@@ -202,6 +287,23 @@ export default function CountrySidePanel({
         </button>
 
         <button
+          onClick={() => setActiveTab('alliances')}
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === 'alliances'
+              ? 'bg-indigo-600 text-white shadow-md font-black'
+              : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+          }`}
+        >
+          <Shield className="h-3.5 w-3.5 text-indigo-300" />
+          <span>{isAr ? 'التحالفات والشراكات' : 'Alliances & Blocs'}</span>
+          {(alliancesData?.totalAlliancesCount || 0) > 0 && (
+            <span className="rounded bg-indigo-950/80 border border-indigo-500/40 px-1 py-0.2 text-[9px] font-mono text-indigo-300">
+              {alliancesData.totalAlliancesCount}
+            </span>
+          )}
+        </button>
+
+        <button
           onClick={() => setActiveTab('economy')}
           className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
             activeTab === 'economy'
@@ -210,7 +312,7 @@ export default function CountrySidePanel({
           }`}
         >
           <Coins className="h-3.5 w-3.5" />
-          <span>{isAr ? 'المؤشرات الاقتصادية' : 'Economic Indicators'}</span>
+          <span>{isAr ? 'المؤشرات الاقتصادية والعملة' : 'Economy & Currency'}</span>
         </button>
 
         <button
@@ -260,6 +362,74 @@ export default function CountrySidePanel({
           <History className="h-3.5 w-3.5" />
           <span>{isAr ? 'التاريخ' : 'History'}</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('events')}
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === 'events'
+              ? 'bg-rose-600 text-white shadow-md font-black'
+              : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+          }`}
+        >
+          <Flame className="h-3.5 w-3.5" />
+          <span>{isAr ? 'الأحداث السيادية' : 'Sovereign Events'}</span>
+          {((historicalEventsData?.assassinations?.length || 0) +
+            (historicalEventsData?.terrorEvents?.length || 0) +
+            (historicalEventsData?.foreignEscalations?.length || 0)) > 0 && (
+            <span className="rounded bg-rose-950/80 border border-rose-500/40 px-1 py-0.2 text-[9px] font-mono text-rose-300">
+              {(historicalEventsData?.assassinations?.length || 0) +
+                (historicalEventsData?.terrorEvents?.length || 0) +
+                (historicalEventsData?.foreignEscalations?.length || 0)}
+            </span>
+          )}
+        </button>
+
+        {/* تبويب الشركات والاستثمارات السيادية */}
+        <button
+          onClick={() => setActiveTab('investments')}
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === 'investments'
+              ? 'bg-amber-600 text-white shadow-md font-black'
+              : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+          }`}
+        >
+          <Building2 className="h-3.5 w-3.5" />
+          <span>{isAr ? 'الشركات والاستثمارات' : 'Investments & SWF'}</span>
+        </button>
+
+        {/* تبويب المصادر والمنصات الرسمية الموثقة */}
+        <button
+          onClick={() => setActiveTab('sources')}
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === 'sources'
+              ? 'bg-sky-600 text-white shadow-md font-black'
+              : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+          }`}
+        >
+          <Globe className="h-3.5 w-3.5" />
+          <span>{isAr ? 'المصادر الرسمية' : 'Official Sources'}</span>
+          <span className="rounded bg-sky-950/80 border border-sky-500/40 px-1 py-0.2 text-[9px] font-mono text-sky-300">
+            {officialSources.length}
+          </span>
+        </button>
+
+        {/* تبويب الأخبار المباشرة والروابط */}
+        <button
+          onClick={() => setActiveTab('news')}
+          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === 'news'
+              ? 'bg-rose-500 text-white shadow-md font-black'
+              : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+          }`}
+        >
+          <Radio className="h-3.5 w-3.5 text-rose-400 animate-pulse" />
+          <span>{isAr ? 'أحدث الأخبار' : 'Live Wires'}</span>
+          {countryNews.length > 0 && (
+            <span className="rounded bg-rose-950/80 border border-rose-500/40 px-1 py-0.2 text-[9px] font-mono text-rose-300">
+              {countryNews.length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* محتوى اللوحة الجانبية القابل للتمرير */}
@@ -271,10 +441,180 @@ export default function CountrySidePanel({
           </div>
         )}
 
-        {/* التبويب الثاني: المؤشرات الاقتصادية والتجارة والتضخم */}
+        {/* التبويب الثاني: التحالفات العسكرية والتكتلات الاقتصادية والدول الأعضاء */}
+        {activeTab === 'alliances' && (
+          <div className="space-y-4">
+            <CountryAlliancesSidePanel
+              country={country}
+              lang={lang}
+              compact
+              onSelectCountry={onOpenFullDossier}
+            />
+          </div>
+        )}
+
+        {/* التبويب الثالث: المؤشرات الاقتصادية وتقلبات العملة لـ 10 سنوات */}
         {activeTab === 'economy' && (
           <div className="space-y-4">
+            {/* الرسم البياني التفاعلي لتقلبات العملة المحلية مقابل الدولار لـ 10 سنوات */}
+            <CountryCurrency10YearChart country={country} lang={lang} compact />
+
+            {/* بطاقة العملة وسعر الصرف الرسمي والموازي */}
+            {historicalEventsData?.currencyEvolution && (
+              <div className="rounded-xl border border-emerald-500/35 bg-gradient-to-l from-slate-900 via-slate-900 to-emerald-950/30 p-3.5 space-y-2.5 shadow-md">
+                <div className="flex items-center justify-between gap-2 border-b border-emerald-500/20 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono text-sm font-black">
+                      {historicalEventsData.currencyEvolution.symbol || '¤'}
+                    </div>
+                    <div>
+                      <h5 className="m-0 text-xs font-black text-white">
+                        {isAr ? historicalEventsData.currencyEvolution.nameAr : historicalEventsData.currencyEvolution.nameEn} ({historicalEventsData.currencyEvolution.code})
+                      </h5>
+                      <span className="text-[10px] text-slate-400 block">
+                        {isAr ? historicalEventsData.currencyEvolution.centralBankAr : (historicalEventsData.currencyEvolution.centralBankEn || historicalEventsData.currencyEvolution.centralBankAr)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="rounded bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300 font-mono">
+                    {historicalEventsData.currencyEvolution.code}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <span className="text-[10px] text-slate-400 block font-bold">
+                    {isAr ? 'سعر الصرف الموثق / التثبيت:' : 'Exchange Rate / Peg:'}
+                  </span>
+                  <p className="m-0 font-mono text-xs font-black text-emerald-300">
+                    {historicalEventsData.currencyEvolution.currentExchangeRateUsd}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-[11px] text-slate-300 leading-relaxed">
+                  <b className="text-slate-400">{isAr ? 'نظام الصرف: ' : 'Regime: '}</b>
+                  <span>{isAr ? historicalEventsData.currencyEvolution.pegStatusAr : (historicalEventsData.currencyEvolution.pegStatusEn || historicalEventsData.currencyEvolution.pegStatusAr)}</span>
+                </div>
+              </div>
+            )}
+
             <EconomicIndicatorsSection country={country} lang={lang} />
+          </div>
+        )}
+
+        {/* تبويب الأحداث السيادية: اغتيالات، إرهاب، تصاعدات أجنبية */}
+        {activeTab === 'events' && (
+          <div className="space-y-3.5">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3">
+              <h4 className="m-0 text-xs font-black text-rose-300 flex items-center gap-1.5">
+                <Flame className="h-4 w-4" />
+                {isAr ? 'السجل السيادي: اغتيالات وإرهاب وتصاعدات' : 'Sovereign Events Registry'}
+              </h4>
+              <p className="m-0 mt-0.5 text-[11px] text-slate-400">
+                {isAr
+                  ? 'رصد استخباري للأحداث السيادية المفصلية والاغتيالات والنزاعات الدولية الكبرى'
+                  : 'Documented assassinations, terror incidents, and foreign conflicts'}
+              </p>
+            </div>
+
+            {/* بطاقة العملة السريعة */}
+            {historicalEventsData?.currencyEvolution && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs flex items-center justify-between">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">{isAr ? 'سعر صرف العملة الموثق:' : 'Currency Exchange Rate:'}</span>
+                  <span className="font-mono font-bold text-emerald-400">{historicalEventsData.currencyEvolution.currentExchangeRateUsd}</span>
+                </div>
+                <Coins className="h-4 w-4 text-emerald-400" />
+              </div>
+            )}
+
+            {/* 1. الاغتيالات السياسية */}
+            {historicalEventsData?.assassinations?.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="m-0 text-xs font-black text-rose-400 flex items-center gap-1.5">
+                  <Skull className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'الاغتيالات السياسية الكبرى' : 'Political Assassinations'}</span>
+                </h5>
+                <div className="space-y-2">
+                  {historicalEventsData.assassinations.map((item, idx) => (
+                    <div key={idx} className="rounded-xl border border-rose-500/30 bg-slate-900/60 p-2.5 space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="font-bold text-white text-[11px]">{isAr ? item.targetAr : item.targetEn}</span>
+                        <span className="font-mono text-[10px] text-rose-400 shrink-0">{item.year}</span>
+                      </div>
+                      <span className="text-[10px] text-rose-300/80 block">
+                        {isAr ? 'المنفذ:' : 'Perpetrator:'} {isAr ? item.perpetratorAr : item.perpetratorEn}
+                      </span>
+                      <p className="m-0 text-[11px] text-slate-300 leading-relaxed pt-1 border-t border-slate-800/60">
+                        {isAr ? item.detailsAr : item.detailsEn}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 2. العمليات الإرهابية */}
+            {historicalEventsData?.terrorEvents?.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="m-0 text-xs font-black text-amber-400 flex items-center gap-1.5">
+                  <AlertOctagon className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'العمليات الإرهابية ومكافحة الإرهاب' : 'Terrorism Incidents'}</span>
+                </h5>
+                <div className="space-y-2">
+                  {historicalEventsData.terrorEvents.map((item, idx) => (
+                    <div key={idx} className="rounded-xl border border-amber-500/30 bg-slate-900/60 p-2.5 space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="font-bold text-white text-[11px]">{isAr ? item.titleAr : item.titleEn}</span>
+                        <span className="font-mono text-[10px] text-amber-400 shrink-0">{item.year}</span>
+                      </div>
+                      <span className="text-[10px] text-amber-300/80 block">
+                        {isAr ? 'الجهة:' : 'Group:'} {isAr ? item.groupAr : item.groupEn}
+                      </span>
+                      <p className="m-0 text-[11px] text-slate-300 leading-relaxed pt-1 border-t border-slate-800/60">
+                        {isAr ? item.detailsAr : item.detailsEn}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. التصاعدات والحروب الخارجية */}
+            {historicalEventsData?.foreignEscalations?.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="m-0 text-xs font-black text-purple-400 flex items-center gap-1.5">
+                  <Swords className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'التصاعدات والحروب مع دول أجنبية' : 'Foreign Escalations'}</span>
+                </h5>
+                <div className="space-y-2">
+                  {historicalEventsData.foreignEscalations.map((item, idx) => (
+                    <div key={idx} className="rounded-xl border border-purple-500/30 bg-slate-900/60 p-2.5 space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="font-bold text-white text-[11px]">{isAr ? item.titleAr : item.titleEn}</span>
+                        <span className="font-mono text-[10px] text-purple-400 shrink-0">{item.year}</span>
+                      </div>
+                      <span className="text-[10px] text-purple-300/80 block">
+                        {isAr ? 'الطرف الخصم:' : 'Opponent:'} {isAr ? item.opponentCountryAr : item.opponentCountryEn}
+                      </span>
+                      <p className="m-0 text-[11px] text-slate-300 leading-relaxed pt-1 border-t border-slate-800/60">
+                        {isAr ? item.detailsAr : item.detailsEn}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* زر فتح الملف السيادي الكامل */}
+            {onOpenFullDossier && (
+              <button
+                onClick={() => onOpenFullDossier(country)}
+                className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-gradient-to-r from-rose-500/20 to-amber-500/20 p-2.5 text-xs font-bold text-rose-200 hover:bg-rose-500/30 transition shadow"
+              >
+                <Flame className="h-4 w-4 text-rose-400" />
+                <span>{isAr ? 'فتح الملف السيادي والأحداث بالتفصيل الكامل' : 'Open Full Sovereign Dossier & Events'}</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -625,6 +965,261 @@ export default function CountrySidePanel({
                 </li>
               ))}
             </ol>
+          </div>
+        )}
+
+        {/* التبويب السابع: الشركات والاستثمارات والصناديق السيادية والمشاريع الكبرى */}
+        {activeTab === 'investments' && (
+          <div className="space-y-4">
+            {/* بطاقة الصندوق السيادي */}
+            {investmentsData?.sovereignWealthFund && (
+              <div className="rounded-2xl border border-amber-500/35 bg-gradient-to-l from-slate-900 via-slate-900 to-amber-950/25 p-4 space-y-3 shadow-lg">
+                <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                      <Coins className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="m-0 text-sm font-black text-white">
+                        {isAr ? investmentsData.sovereignWealthFund.nameAr : investmentsData.sovereignWealthFund.nameEn}
+                      </h4>
+                      <span className="text-[11px] font-mono text-amber-400 font-bold">
+                        {investmentsData.sovereignWealthFund.acronym} · {isAr ? `المرتبة #${investmentsData.sovereignWealthFund.globalRank} عالمياً` : `Rank #${investmentsData.sovereignWealthFund.globalRank} Globally`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-end shrink-0">
+                    <span className="text-[10px] text-slate-400 block">{isAr ? 'حجم الأصول (AUM):' : 'Assets Under Mgmt:'}</span>
+                    <span className="font-mono text-base font-black text-amber-300">
+                      ${investmentsData.sovereignWealthFund.aumBn}B
+                    </span>
+                  </div>
+                </div>
+
+                <p className="m-0 text-xs leading-relaxed text-slate-300">
+                  {isAr ? investmentsData.sovereignWealthFund.strategyAr : investmentsData.sovereignWealthFund.strategyEn}
+                </p>
+
+                {/* كبرى الحصص والأصول الدولية للصندوق */}
+                {investmentsData.sovereignWealthFund.majorHoldings && investmentsData.sovereignWealthFund.majorHoldings.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-amber-400" />
+                      <span>{isAr ? 'أبرز الاستثمارات والأصول السيادية الكبرى:' : 'Key Sovereign Holdings & Assets:'}</span>
+                    </span>
+                    <div className="grid gap-1.5 sm:grid-cols-2">
+                      {investmentsData.sovereignWealthFund.majorHoldings.map((h, i) => (
+                        <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/70 p-2 text-xs flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="font-bold text-white block truncate">{h.name}</span>
+                            <span className="text-[10px] text-slate-400">{h.sector} ({h.country})</span>
+                          </div>
+                          <span className="font-mono text-[10px] font-bold text-amber-400 bg-amber-950/50 border border-amber-500/30 px-1.5 py-0.5 rounded shrink-0">
+                            {h.stake}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* المشاريع الاستراتيجية والمدن الكبرى */}
+            {investmentsData?.strategicMegaProjects && investmentsData.strategicMegaProjects.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="m-0 text-xs font-black text-slate-200 flex items-center gap-1.5">
+                  <Building2 className="h-4 w-4 text-sky-400" />
+                  <span>{isAr ? 'المشروعات القومية والمدن المستقبلية العملاقة' : 'Mega Giga-Projects & Strategic Corridors'}</span>
+                </h4>
+                <div className="space-y-2">
+                  {investmentsData.strategicMegaProjects.map((proj, idx) => (
+                    <div key={idx} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h5 className="m-0 text-xs font-bold text-white">
+                            {isAr ? proj.nameAr : proj.nameEn}
+                          </h5>
+                          <span className="text-[10px] text-sky-400 block mt-0.5">
+                            {isAr ? proj.sectorAr : proj.sectorEn}
+                          </span>
+                        </div>
+                        <span className="font-mono text-xs font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded shrink-0">
+                          ${proj.budgetBn}B
+                        </span>
+                      </div>
+                      <p className="m-0 text-[11px] text-slate-300 leading-snug">
+                        {isAr ? proj.descriptionAr : proj.descriptionEn}
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
+                        <span>{isAr ? 'الجدول الزمني:' : 'Timeline:'} {proj.timeline}</span>
+                        <span className="text-amber-400 font-bold">{proj.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* كبرى الشركات الوطنية */}
+            <div className="space-y-2">
+              <h4 className="m-0 text-xs font-black text-slate-200 flex items-center gap-1.5">
+                <Building className="h-4 w-4 text-emerald-400" />
+                <span>{isAr ? `كبرى الشركات الوطنية والعالمية (${companiesList.length})` : `Leading Corporate Champions (${companiesList.length})`}</span>
+              </h4>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {companiesList.map((comp, i) => (
+                  <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 space-y-1 hover:border-slate-700 transition">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-xs text-white truncate">{comp.name}</span>
+                      <span className="font-mono text-[10px] font-bold text-amber-300 bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.2 rounded shrink-0">
+                        {comp.valuation || 'Top'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-sky-400 block">{isAr ? comp.sectorAr : comp.sectorEn}</span>
+                    <p className="m-0 text-[11px] text-slate-300 line-clamp-2 leading-relaxed">{isAr ? comp.roleAr : comp.roleEn}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* التبويب الثامن: المصادر والمنصات الرسمية للدولة */}
+        {activeTab === 'sources' && (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-sky-500/25 bg-gradient-to-r from-slate-900 to-sky-950/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-sky-400" />
+                <h4 className="m-0 text-xs font-black text-white">
+                  {isAr ? `المصادر والمنصات السيادية الموثقة لـ ${countryName}` : `Official Sovereign Portals of ${countryName}`}
+                </h4>
+              </div>
+              <p className="m-0 text-[11px] text-slate-300 leading-relaxed">
+                {isAr
+                  ? 'بوابات رئاسة الدولة، وزارتي الخارجية والدفاع، البنك المركزي، الصندوق السيادي، ووكالة الأنباء الرسمية المعتمدة مع روابط مباشرة.'
+                  : 'Direct, verified access to the executive presidency, foreign ministry, defense command, central bank, and official wire.'}
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              {officialSources.map((source) => (
+                <div
+                  key={source.id}
+                  className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 hover:border-sky-500/40 transition space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-black text-white">
+                          {isAr ? source.titleAr : source.titleEn}
+                        </span>
+                        {source.badge && (
+                          <span className="rounded bg-sky-500/20 border border-sky-500/40 px-1.5 py-0.2 text-[9px] font-bold text-sky-300">
+                            {source.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {isAr ? source.categoryAr : source.categoryEn} · <b className="font-mono text-sky-400">{source.domain}</b>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleCopyLink(source.url)}
+                        title={isAr ? 'نسخ الرابط الرسمي' : 'Copy link'}
+                        className="grid h-7 w-7 place-items-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:border-slate-600 transition"
+                      >
+                        {copiedUrl === source.url ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5 text-slate-400" />
+                        )}
+                      </button>
+
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 rounded-lg border border-sky-500/40 bg-sky-500/15 px-2.5 py-1 text-xs font-bold text-sky-300 hover:bg-sky-500/25 transition"
+                      >
+                        <span>{isAr ? 'زيارة المنصة' : 'Visit'}</span>
+                        <ExternalLink className="h-3 w-3 text-sky-300" />
+                      </a>
+                    </div>
+                  </div>
+
+                  <p className="m-0 text-[11px] text-slate-300 leading-snug">
+                    {isAr ? source.descriptionAr : source.descriptionEn}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* التبويب التاسع: أحدث الأخبار المباشرة عن الدولة مع الروابط */}
+        {activeTab === 'news' && (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-rose-500/25 bg-gradient-to-r from-slate-900 to-rose-950/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <Radio className="h-4 w-4 text-rose-400 animate-pulse" />
+                <h4 className="m-0 text-xs font-black text-white">
+                  {isAr ? `البث الإخباري اللحظي لـ ${countryName}` : `Live Intelligence Stream for ${countryName}`}
+                </h4>
+              </div>
+              <p className="m-0 text-[11px] text-slate-300 leading-relaxed">
+                {isAr
+                  ? 'رصد فوري لآخر المستجدات الجيوسياسية والاقتصادية المتعلقة بالدولة من كبرى وكالات الأنباء مع روابط التقارير الأصلية.'
+                  : 'Real-time wire monitoring covering geopolitical and economic developments with original publisher links.'}
+              </p>
+            </div>
+
+            {countryNews.length === 0 ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 text-center text-slate-400 text-xs">
+                {isAr ? 'جارٍ تحديث الأخبار ومزامنة الروافد…' : 'Syncing live dispatches…'}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {countryNews.map((item, idx) => (
+                  <article
+                    key={item.key || idx}
+                    className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 space-y-2 hover:border-slate-700 transition"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded bg-slate-800 border border-slate-700 px-2 py-0.5 text-[10px] font-bold text-sky-300">
+                        {isAr ? item.sourceNameAr || item.source : item.sourceNameEn || item.source}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {item.published
+                          ? new Date(item.published).toLocaleTimeString(isAr ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+                          : (isAr ? 'مباشر' : 'Live')}
+                      </span>
+                    </div>
+
+                    <h5 className="m-0 text-xs font-bold text-white leading-snug">
+                      {translateText(item.text, lang)}
+                    </h5>
+
+                    {item.href && (
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end">
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300 transition"
+                        >
+                          <span>{isAr ? 'قراءة التقرير في المصدر' : 'Read Source'}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

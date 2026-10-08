@@ -6,12 +6,9 @@ import {
   Plane,
   Building2,
   Coins,
-  ChevronDown,
   Award,
   Zap,
   TrendingUp,
-  FileText,
-  FileCode,
   Download,
 } from 'lucide-react';
 import { CountryEmblem, MilitaryInsigniaBadge } from './CountrySymbols';
@@ -193,14 +190,18 @@ export default function CountryComparisonModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse border-b border-slate-800 bg-slate-950/80 p-3 sm:p-4 gap-3">
           {/* الدولة الأولى (A) */}
           <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-900/40 border border-slate-800">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-12 w-12 rounded-xl border border-sky-500/30 bg-slate-900 p-1 shrink-0 flex items-center justify-center">
+            <div
+              className={`flex items-center gap-3 min-w-0 ${onOpenFullCountry ? 'cursor-pointer group' : ''}`}
+              onClick={() => onOpenFullCountry?.(country1)}
+              title={isAr ? 'فتح الملف الاستخباراتي الكامل' : 'Open Full Dossier'}
+            >
+              <div className="h-12 w-12 rounded-xl border border-sky-500/30 bg-slate-900 p-1 shrink-0 flex items-center justify-center transition group-hover:border-sky-400">
                 <CountryEmblem country={country1} className="h-full w-full" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <img src={getFlagUrl(country1?.id)} alt="" className="h-4 w-6 rounded object-cover border border-slate-700" />
-                  <span className="font-black text-sm text-white truncate">{translateText(country1?.name, lang)}</span>
+                  <span className="font-black text-sm text-white truncate group-hover:text-sky-300 transition">{translateText(country1?.name, lang)}</span>
                 </div>
                 <span className="text-[11px] text-sky-400 font-mono block mt-0.5">
                   {country1?.leader} · {country1?.capital}
@@ -225,14 +226,18 @@ export default function CountryComparisonModal({
 
           {/* الدولة الثانية (B) */}
           <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-900/40 border border-slate-800">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-12 w-12 rounded-xl border border-rose-500/30 bg-slate-900 p-1 shrink-0 flex items-center justify-center">
+            <div
+              className={`flex items-center gap-3 min-w-0 ${onOpenFullCountry ? 'cursor-pointer group' : ''}`}
+              onClick={() => onOpenFullCountry?.(country2)}
+              title={isAr ? 'فتح الملف الاستخباراتي الكامل' : 'Open Full Dossier'}
+            >
+              <div className="h-12 w-12 rounded-xl border border-rose-500/30 bg-slate-900 p-1 shrink-0 flex items-center justify-center transition group-hover:border-rose-400">
                 <CountryEmblem country={country2} className="h-full w-full" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <img src={getFlagUrl(country2?.id)} alt="" className="h-4 w-6 rounded object-cover border border-slate-700" />
-                  <span className="font-black text-sm text-white truncate">{translateText(country2?.name, lang)}</span>
+                  <span className="font-black text-sm text-white truncate group-hover:text-rose-300 transition">{translateText(country2?.name, lang)}</span>
                 </div>
                 <span className="text-[11px] text-rose-400 font-mono block mt-0.5">
                   {country2?.leader} · {country2?.capital}

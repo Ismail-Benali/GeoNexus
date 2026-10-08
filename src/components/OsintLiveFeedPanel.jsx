@@ -1,21 +1,15 @@
 import { useState, useMemo } from 'react';
 import {
   Radar,
-  Radio,
   Swords,
-  Shield,
   Anchor,
-  Compass,
   Search,
   Users,
-  Calendar,
   MapPin,
-  ExternalLink,
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
 import { OSINT_EXERCISES, OSINT_ARMS_DEALS, OSINT_FLEET_DEPLOYMENTS } from '../data/osintData';
-import { translateText } from '../utils/translator';
 
 export default function OsintLiveFeedPanel({ lang = 'ar', onFocusOnMap }) {
   const isAr = lang === 'ar';

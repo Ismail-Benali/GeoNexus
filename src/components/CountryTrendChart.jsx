@@ -10,9 +10,10 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { Users, DollarSign, BarChart3, LineChart, X } from 'lucide-react';
+import { Users, DollarSign, BarChart3, LineChart, X, Coins } from 'lucide-react';
 import { getCountryTrendSeries } from '../utils/economicTrends';
 import { CountryFlag } from './CountrySymbols';
+import CountryCurrency10YearChart from './CountryCurrency10YearChart';
 
 function CustomTooltip({ active, payload, _label, mode, isAr, country }) {
   if (!active || !payload || !payload.length) return null;
@@ -125,6 +126,17 @@ export default function CountryTrendChart({ country, lang = 'ar', onClose = null
               <Users className="h-3 w-3" />
               {isAr ? 'السكان' : 'Population'}
             </button>
+            <button
+              onClick={() => setMetric('currency')}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold transition ${
+                metric === 'currency'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Coins className="h-3 w-3" />
+              {isAr ? 'العملة (10 سنوات)' : 'Currency (10y)'}
+            </button>
           </div>
 
           {/* تبديل نوع الرسم (مساحة / أعمدة) */}
@@ -162,7 +174,11 @@ export default function CountryTrendChart({ country, lang = 'ar', onClose = null
       </div>
 
       {/* شريط الإحصائيات السريعة */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+      {metric === 'currency' ? (
+        <CountryCurrency10YearChart country={country} lang={lang} compact />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
         {metric === 'gdp' ? (
           <>
             <div className="rounded-lg border border-slate-800/80 bg-slate-900/60 px-3 py-2">
@@ -252,6 +268,8 @@ export default function CountryTrendChart({ country, lang = 'ar', onClose = null
           )}
         </ResponsiveContainer>
       </div>
+      </>
+    )}
     </div>
   );
 }

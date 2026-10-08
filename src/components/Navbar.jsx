@@ -1,15 +1,44 @@
-import { Globe, Search, Languages, BarChart3, Flame, Radio, Shield, Clock } from 'lucide-react';
+import {
+  Globe,
+  Search,
+  Languages,
+  BarChart3,
+  Flame,
+  Radio,
+  Shield,
+  Clock,
+  Radar,
+  Swords,
+  Crosshair,
+  Vote,
+  Crown,
+  Database,
+  Coins,
+} from 'lucide-react';
 
-export default function Navbar({ lang, setLang, onOpenSearch, activeTab, setActiveTab }) {
+export default function Navbar({
+  lang,
+  setLang,
+  onOpenSearch,
+  activeTab,
+  setActiveTab,
+  onOpenComparison,
+}) {
   const isAr = lang === 'ar';
 
   const tabs = [
     { id: 'map', label: isAr ? 'الخريطة الحية' : 'Live Map', icon: Globe },
+    { id: 'alliances', label: isAr ? 'التحالفات والتكتلات' : 'Alliances Matrix', icon: Shield, badge: '13' },
+    { id: 'currency', label: isAr ? 'تقلبات العملات (10 سنوات)' : 'Currency 10Y FX', icon: Coins, badge: 'FX' },
+    { id: 'arms', label: isAr ? 'صفقات السلاح (SIPRI)' : 'Arms Deals', icon: Crosshair, badge: 'SIPRI' },
+    { id: 'un-votes', label: isAr ? 'تصويت الأمم المتحدة' : 'UN Voting Matrix', icon: Vote, badge: 'UN' },
+    { id: 'statements', label: isAr ? 'عقائد وقادة' : 'Leaders Doctrines', icon: Crown },
     { id: 'hotspots', label: isAr ? 'بؤر النزاع والحروب' : 'Hotspots & Wars', icon: Flame },
-    { id: 'stream', label: isAr ? 'البث المباشر (BBC · DW · الجزيرة)' : 'Live Stream', icon: Radio, badge: 'LIVE' },
-    { id: 'alliances', label: isAr ? 'التحالفات (NATO · EU · BRICS)' : 'Alliances Matrix', icon: Shield },
+    { id: 'osint', label: isAr ? 'رادار OSINT' : 'OSINT Radar', icon: Radar, badge: 'LIVE' },
+    { id: 'stream', label: isAr ? 'البث المباشر' : 'Live Stream', icon: Radio, badge: 'LIVE' },
     { id: 'archive', label: isAr ? 'الأرشيف التاريخي' : 'Historical Archive', icon: Clock },
-    { id: 'analytics', label: isAr ? 'التحليلات والمقارنات' : 'Analytics', icon: BarChart3 },
+    { id: 'pipelines', label: isAr ? 'خطوط البيانات' : 'Data Pipelines', icon: Database, badge: 'SYNC' },
+    { id: 'analytics', label: isAr ? 'التحليلات المقارنة' : 'Analytics', icon: BarChart3 },
   ];
 
   return (
@@ -39,6 +68,18 @@ export default function Navbar({ lang, setLang, onOpenSearch, activeTab, setActi
 
           {/* Actions */}
           <div className="order-2 flex shrink-0 items-center gap-2">
+            {/* زر المقارنة العسكرية المباشرة */}
+            <button
+              onClick={() => onOpenComparison?.()}
+              aria-label={isAr ? 'مقارنة الدول' : 'Compare Countries'}
+              title={isAr ? 'المقارنة العسكرية والجيوسياسية المباشرة بين دولتين' : 'Head-to-Head Military & Geopolitical Comparison'}
+              className="group flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-rose-500/15 px-3 py-1.5 text-xs font-bold text-amber-300 shadow-sm transition hover:border-amber-400 hover:bg-amber-500/25"
+            >
+              <Swords className="h-4 w-4 text-amber-400 transition group-hover:rotate-12" />
+              <span className="hidden sm:inline">{isAr ? 'مقارنة عسكرية' : 'Compare'}</span>
+              <span className="rounded bg-amber-500/20 border border-amber-500/40 px-1 py-0.2 text-[9px] font-mono text-amber-200">VS</span>
+            </button>
+
             <button
               onClick={onOpenSearch}
               aria-label={isAr ? 'بحث' : 'Search'}

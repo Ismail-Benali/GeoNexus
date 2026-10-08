@@ -21,6 +21,12 @@ import {
   Swords,
   Flame,
   TrendingUp,
+  Vote,
+  Quote,
+  Skull,
+  AlertOctagon,
+  BadgeAlert,
+  Clock,
 } from 'lucide-react';
 import { CountryEmblem, MilitaryInsigniaBadge } from './CountrySymbols';
 import { getFlagUrl } from '../utils/countrySymbols';
@@ -30,7 +36,13 @@ import { getCountryIntelligenceData } from '../data/countryExtendedIntelligence.
 import { getCountryCompanies } from '../data/countryCompaniesDB.js';
 import { getCountryMilitaryArsenal } from '../data/countryMilitaryArsenalDB.js';
 import { getCountryDiplomacyTensions } from '../data/countryDiplomacyTensionsDB.js';
+import { getCountryArmsDeals } from '../data/armsDealsData.js';
+import { getCountryUnVotingRecord } from '../data/unVotingRecordsData.js';
+import { getCountryLeadersStatements } from '../data/leadersStatementsData.js';
+import { getCountryHistoricalEventsData } from '../data/countryHistoricalEventsDB.js';
 import { downloadJsonReport, downloadPdfReport } from '../utils/reportExporter.js';
+import CountryCurrency10YearChart from './CountryCurrency10YearChart.jsx';
+import CountryAlliancesSidePanel from './CountryAlliancesSidePanel.jsx';
 
 const TABS = [
   { id: 'overview', icon: Landmark, labelAr: 'النبذة والسيادة', labelEn: 'Overview' },
@@ -38,8 +50,9 @@ const TABS = [
   { id: 'companies', icon: Building2, labelAr: 'الشركات والاستثمارات', labelEn: 'Companies' },
   { id: 'diplomacy', icon: Network, labelAr: 'الدبلوماسية والتوترات', labelEn: 'Diplomacy & Tensions' },
   { id: 'intel', icon: Radar, labelAr: 'أجهزة المخابرات', labelEn: 'Intelligence' },
-  { id: 'economy', icon: Coins, labelAr: 'الاقتصاد والعملة', labelEn: 'Economy & Currency' },
-  { id: 'treaties', icon: Lock, labelAr: 'المعاهدات والتحالفات', labelEn: 'Treaties' },
+  { id: 'economy', icon: Coins, labelAr: 'الاقتصاد ومخطط تقلبات العملة لـ 10 سنوات', labelEn: 'Economy & 10-Yr Currency' },
+  { id: 'events', icon: Flame, labelAr: 'الأحداث السيادية (اغتيالات وإرهاب وتصاعدات)', labelEn: 'Sovereign Events' },
+  { id: 'treaties', icon: Lock, labelAr: 'التحالفات العسكرية والتكتلات الاقتصادية', labelEn: 'Alliances & Blocs' },
   { id: 'history', icon: History, labelAr: 'التاريخ والتحولات السياسية', labelEn: 'History & Transitions' },
   { id: 'risk', icon: AlertTriangle, labelAr: 'المخاطر السيادية', labelEn: 'Risk Matrix' },
 ];
@@ -79,11 +92,12 @@ function Card({ title, icon: Icon, tone = 'sky', children }) {
   );
 }
 
-export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
+export default function CountryDetailModal({ country, lang = 'ar', onClose, onOpenComparison }) {
   const isAr = lang === 'ar';
   const [activeTab, setActiveTab] = useState('overview');
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'global' | 'local'
+  const [eventsFilter, setEventsFilter] = useState('all'); // 'all' | 'assassinations' | 'terror' | 'escalations'
   const [settled, setSettled] = useState({});
 
   const countryId = country?.id ?? null;
@@ -109,6 +123,26 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
   const diplomacyTensions = useMemo(() => {
     return getCountryDiplomacyTensions(country, lang);
   }, [country, lang]);
+
+  // صفقات السلاح الموثقة للدولة من قاعدة SIPRI
+  const countryArmsDeals = useMemo(() => {
+    return getCountryArmsDeals(country?.id);
+  }, [country?.id]);
+
+  // سجل تصويت الدولة في الجمعية العامة ومجلس الأمن
+  const countryUnVotes = useMemo(() => {
+    return getCountryUnVotingRecord(country?.id);
+  }, [country?.id]);
+
+  // تصريحات وخطابات القيادة والملك/الرئيس الرسمية
+  const countryStatements = useMemo(() => {
+    return getCountryLeadersStatements(country?.id);
+  }, [country?.id]);
+
+  // الأحداث السيادية والتحولات النقدية التاريخية الدقيقة للدولة
+  const historicalEventsData = useMemo(() => {
+    return getCountryHistoricalEventsData(country?.id);
+  }, [country?.id]);
 
   // تصفية الشركات
   const filteredCompanies = useMemo(() => {
@@ -216,6 +250,22 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
 
             {/* أدوات التحميل والإغلاق */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* زر المقارنة الاستراتيجية المباشرة */}
+              {onOpenComparison && (
+                <button
+                  onClick={() => {
+                    onOpenComparison(country);
+                    onClose();
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-rose-500/15 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:border-amber-400 hover:bg-amber-500/25 shadow-sm"
+                  title={isAr ? 'مقارنة هذه الدولة مباشرة مع أي دولة أخرى' : 'Compare this country head-to-head'}
+                >
+                  <Swords className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">{isAr ? 'مقارنة عسكرية' : 'Compare'}</span>
+                  <span className="rounded bg-amber-500/20 border border-amber-500/40 px-1 py-0.2 text-[9px] font-mono text-amber-200">VS</span>
+                </button>
+              )}
+
               {/* قائمة زر تحميل التقرير (Download Report) */}
               <div className="relative">
                 <button
@@ -389,6 +439,35 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
                   ))}
                 </div>
               </Card>
+
+              {/* خطابات وتصريحات وعقائد القيادة الرسمية الموثقة */}
+              {countryStatements.length > 0 && (
+                <div className="sm:col-span-2">
+                  <Card title={isAr ? 'خطابات وتصريحات وعقيدة القيادة الرسمية (موثق)' : 'Official Leadership Statements & Doctrines'} icon={Quote} tone="amber">
+                    <div className="space-y-3">
+                      {countryStatements.map((stmt) => (
+                        <div key={stmt.id} className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-xs text-amber-300">
+                              {isAr ? stmt.leaderNameAr : stmt.leaderNameEn} — {isAr ? stmt.forumOccasionAr : stmt.forumOccasionEn}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              {stmt.dateFormattedAr}
+                            </span>
+                          </div>
+                          <p className="m-0 text-xs text-amber-100 italic leading-relaxed">
+                            {stmt.verbatimQuoteAr}
+                          </p>
+                          <div className="rounded-lg bg-slate-900/60 p-2 text-[11px] text-slate-300">
+                            <span className="font-bold text-sky-400 me-1">{isAr ? 'العقيدة الاستراتيجية:' : 'Doctrine:'}</span>
+                            {stmt.strategicDoctrineAr}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              )}
             </div>
           )}
 
@@ -591,6 +670,41 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
                 lang={lang}
                 busy={statsBusy}
               />
+
+              {/* صفقات السلاح وعقود التسليح الموثقة للدولة (SIPRI / DSCA) */}
+              {countryArmsDeals.length > 0 && (
+                <Card
+                  title={isAr ? `صفقات السلاح الكبرى الموثقة للدولة (SIPRI / DSCA - ${countryArmsDeals.length} صفقات)` : `Verified Arms Deals & Transfers (SIPRI - ${countryArmsDeals.length} Contracts)`}
+                  icon={Crosshair}
+                  tone="emerald"
+                >
+                  <div className="space-y-2.5">
+                    {countryArmsDeals.map((deal) => (
+                      <div
+                        key={deal.id}
+                        className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-xs text-white">
+                            {isAr ? deal.systemNameAr : deal.systemNameEn}
+                          </span>
+                          <span className="font-mono text-xs font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
+                            {deal.contractValue}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-300">
+                          <span className="text-slate-400 me-1">{isAr ? 'الكمية والعتاد:' : 'Quantity:'}</span>
+                          {deal.quantity}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
+                          <span>{isAr ? 'المصنع:' : 'Maker:'} {isAr ? deal.manufacturerAr : deal.manufacturerEn}</span>
+                          <span className="text-amber-300 font-medium">{deal.deliveryTimeline}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </div>
           )}
 
@@ -735,6 +849,51 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
                   ))}
                 </ol>
               </Card>
+
+              {/* سجل تصويت الدولة في الجمعية العامة ومجلس الأمن للأمم المتحدة */}
+              {countryUnVotes.length > 0 && (
+                <Card
+                  title={isAr ? `سجل تصويت الدولة في الأمم المتحدة (UNGA / UNSC - ${countryUnVotes.length} قرارات)` : `UN Voting Record & International Stances (${countryUnVotes.length} Resolutions)`}
+                  icon={Vote}
+                  tone="sky"
+                >
+                  <div className="space-y-2">
+                    {countryUnVotes.map((v) => (
+                      <div
+                        key={v.resolutionId}
+                        className="rounded-xl border border-slate-800 bg-slate-900/60 p-2.5 space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-mono text-[10px] font-bold text-sky-400 bg-sky-950 px-1.5 py-0.5 rounded border border-sky-800 shrink-0">
+                              {v.symbol}
+                            </span>
+                            <span className="font-bold text-xs text-white truncate">
+                              {isAr ? v.titleAr : v.titleEn}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${
+                              v.userCountryVote === 'in_favor'
+                                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                                : v.userCountryVote === 'against'
+                                ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                                : 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                            }`}
+                          >
+                            {v.userCountryVoteAr}
+                          </span>
+                        </div>
+                        {v.userCountryNoteAr && (
+                          <p className="m-0 text-[11px] text-slate-300 border-t border-slate-800 pt-1 leading-relaxed">
+                            {v.userCountryNoteAr}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </div>
           )}
 
@@ -781,9 +940,102 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
             </div>
           )}
 
-          {/* 6. تبويب الاقتصاد والعملة والتجارة */}
+          {/* 6. تبويب الاقتصاد والعملة والتحول النقدي التاريخي */}
           {activeTab === 'economy' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* الرسم البياني التفاعلي لتقلبات العملة المحلية مقابل الدولار خلال السنوات العشر الأخيرة */}
+              <CountryCurrency10YearChart country={country} lang={lang} />
+
+              {/* بطاقة سعر الصرف المباشر ونظام التثبيت النقدي */}
+              {historicalEventsData?.currencyEvolution && (
+                <div className="rounded-xl border border-emerald-500/40 bg-gradient-to-l from-slate-900 via-slate-950 to-emerald-950/30 p-4 shadow-lg space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono text-base font-black">
+                        {historicalEventsData.currencyEvolution.symbol || '¤'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="m-0 text-sm font-black text-white">
+                            {isAr ? historicalEventsData.currencyEvolution.nameAr : historicalEventsData.currencyEvolution.nameEn}
+                          </h4>
+                          <span className="font-mono text-xs font-black text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded">
+                            {historicalEventsData.currencyEvolution.code}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 block mt-0.5">
+                          {isAr ? historicalEventsData.currencyEvolution.centralBankAr : (historicalEventsData.currencyEvolution.centralBankEn || historicalEventsData.currencyEvolution.centralBankAr)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-start sm:text-end bg-slate-900/90 sm:bg-transparent p-2.5 sm:p-0 rounded-lg border border-slate-800 sm:border-0">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                        {isAr ? 'سعر الصرف الموثق / التثبيت الرسمي:' : 'Verified Exchange Rate / Official Peg:'}
+                      </span>
+                      <span className="font-mono text-xs sm:text-sm font-black text-emerald-300">
+                        {historicalEventsData.currencyEvolution.currentExchangeRateUsd}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* تفاصيل نظام الصرف والاحتياطيات */}
+                  <div className="grid gap-2 sm:grid-cols-2 text-xs">
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                      <span className="font-bold text-slate-400 block mb-1">
+                        {isAr ? 'نظام الصرف المعتمد (Exchange Regime):' : 'Exchange Rate Regime:'}
+                      </span>
+                      <p className="m-0 text-slate-200 text-[11px] leading-relaxed">
+                        {isAr ? historicalEventsData.currencyEvolution.pegStatusAr : (historicalEventsData.currencyEvolution.pegStatusEn || historicalEventsData.currencyEvolution.pegStatusAr)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                      <span className="font-bold text-slate-400 block mb-1">
+                        {isAr ? 'الاحتياطي النقدي الأجنبي السيادي:' : 'Sovereign FX Reserves Status:'}
+                      </span>
+                      <p className="m-0 text-slate-200 text-[11px] leading-relaxed font-mono">
+                        {historicalEventsData.currencyEvolution.foreignReservesUsd || `~$${extendedIntel?.currency?.foreignReservesBn || '120'}B USD`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* الخط الزمني لتطور العملة والأزمات النقدية التاريخية */}
+                  {historicalEventsData.currencyEvolution.currencyHistoryTimeline?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-800/80">
+                      <h5 className="m-0 text-xs font-black text-emerald-400 flex items-center gap-1.5 mb-2.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{isAr ? 'المحطات التاريخية لتطور قيمة العملة والتحولات النقدية:' : 'Monetary History & Currency Devaluation Timeline:'}</span>
+                      </h5>
+
+                      <ol className="relative border-s border-emerald-500/30 ms-3 space-y-3">
+                        {historicalEventsData.currencyEvolution.currencyHistoryTimeline.map((item, idx) => (
+                          <li key={idx} className="ms-4">
+                            <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full border border-emerald-400 bg-slate-950" />
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-xs font-black text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.2 rounded">
+                                {item.year}
+                              </span>
+                              <span className="font-bold text-xs text-white">
+                                {isAr ? item.eventAr : (item.eventEn || item.eventAr)}
+                              </span>
+                              {item.rateAtTime && (
+                                <span className="font-mono text-[10px] text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
+                                  {item.rateAtTime}
+                                </span>
+                              )}
+                            </div>
+                            <p className="m-0 mt-1 text-[11px] text-slate-300 leading-relaxed">
+                              {isAr ? item.detailsAr : (item.detailsEn || item.detailsAr)}
+                            </p>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid gap-3 sm:grid-cols-2">
                 <Card title={isAr ? 'العملة الوطنية والبنك المركزي' : 'National Currency & Central Bank'} icon={Coins} tone="emerald">
                   <Row label={isAr ? 'اسم العملة' : 'Currency Name'} value={`${extendedIntel?.currency?.nameAr || country.currency} (${extendedIntel?.currency?.code})`} />
@@ -812,34 +1064,325 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose }) {
             </div>
           )}
 
-          {/* 7. تبويب المعاهدات والاتفاقيات الدولية */}
-          {activeTab === 'treaties' && (
-            <div className="space-y-3">
-              <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-3 text-xs text-indigo-300">
-                {isAr
-                  ? 'سجل المعاهدات العسكرية واتفاقيات الدفاع المشترك والترتيبات الأمنية الدولية الملزمة.'
-                  : 'Registry of collective defense treaties, mutual security pacts and binding international accords.'}
+          {/* 7. تبويب الأحداث السيادية (اغتيالات، إرهاب، تصاعدات مع دول أجنبية) */}
+          {activeTab === 'events' && (
+            <div className="space-y-4">
+              {/* شريط الإحصائيات السريعة للأحداث السيادية */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-rose-300 block">{isAr ? 'اغتيالات سياسية كبرى' : 'Assassinations'}</span>
+                  <span className="font-mono text-lg font-black text-white">{historicalEventsData?.assassinations?.length || 0}</span>
+                </div>
+                <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-amber-300 block">{isAr ? 'أحداث إرهاب ومكافحة' : 'Terror Incidents'}</span>
+                  <span className="font-mono text-lg font-black text-white">{historicalEventsData?.terrorEvents?.length || 0}</span>
+                </div>
+                <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-purple-300 block">{isAr ? 'تصاعدات وحروب خارجية' : 'Foreign Escalations'}</span>
+                  <span className="font-mono text-lg font-black text-white">{historicalEventsData?.foreignEscalations?.length || 0}</span>
+                </div>
+                <div className="rounded-xl border border-sky-500/30 bg-sky-950/20 p-2.5 text-center">
+                  <span className="text-[10px] font-bold text-sky-300 block">{isAr ? 'إجمالي الوقائع الموثقة' : 'Total Incidents'}</span>
+                  <span className="font-mono text-lg font-black text-emerald-400">
+                    {(historicalEventsData?.assassinations?.length || 0) +
+                      (historicalEventsData?.terrorEvents?.length || 0) +
+                      (historicalEventsData?.foreignEscalations?.length || 0)}
+                  </span>
+                </div>
               </div>
 
-              <div className="grid gap-2.5">
-                {(extendedIntel?.treaties || []).map((treaty, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="m-0 text-xs font-bold text-white flex items-center gap-1.5">
-                        <Lock className="h-3.5 w-3.5 text-indigo-400" />
-                        <span>{isAr ? treaty.nameAr : treaty.nameEn}</span>
-                      </h4>
-                      {treaty.year && <span className="font-mono text-[10px] text-slate-500">{treaty.year}</span>}
-                    </div>
-                    <p className="m-0 text-xs text-slate-300 leading-relaxed">
-                      {isAr ? treaty.scopeAr : treaty.scopeEn}
-                    </p>
-                  </div>
-                ))}
+              {/* أزرار تصفية الوقائع */}
+              <div className="flex items-center gap-1.5 flex-wrap bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                <span className="text-xs text-slate-400 font-bold me-1">{isAr ? 'تصفية الوقائع:' : 'Filter:'}</span>
+                <button
+                  onClick={() => setEventsFilter('all')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    eventsFilter === 'all'
+                      ? 'bg-sky-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {isAr ? 'الكل' : 'All'}
+                </button>
+                <button
+                  onClick={() => setEventsFilter('assassinations')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    eventsFilter === 'assassinations'
+                      ? 'bg-rose-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Skull className="h-3 w-3" />
+                  <span>{isAr ? 'اغتيالات سياسية' : 'Assassinations'}</span>
+                  <span className="font-mono text-[10px] opacity-80">({historicalEventsData?.assassinations?.length || 0})</span>
+                </button>
+                <button
+                  onClick={() => setEventsFilter('terror')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    eventsFilter === 'terror'
+                      ? 'bg-amber-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <AlertOctagon className="h-3 w-3" />
+                  <span>{isAr ? 'إرهاب ومكافحة' : 'Terrorism'}</span>
+                  <span className="font-mono text-[10px] opacity-80">({historicalEventsData?.terrorEvents?.length || 0})</span>
+                </button>
+                <button
+                  onClick={() => setEventsFilter('escalations')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    eventsFilter === 'escalations'
+                      ? 'bg-purple-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Swords className="h-3 w-3" />
+                  <span>{isAr ? 'تصاعدات مع دول أجنبية' : 'Foreign Escalations'}</span>
+                  <span className="font-mono text-[10px] opacity-80">({historicalEventsData?.foreignEscalations?.length || 0})</span>
+                </button>
               </div>
+
+              {/* 1. قسم الاغتيالات السياسية الكبرى */}
+              {(eventsFilter === 'all' || eventsFilter === 'assassinations') && (
+                <div className="space-y-3">
+                  <h3 className="m-0 text-sm font-black text-rose-400 flex items-center gap-2 border-b border-rose-500/20 pb-2">
+                    <Skull className="h-4 w-4" />
+                    <span>{isAr ? 'الاغتيالات السياسية ومحاولات التصفية الكبرى' : 'Major Political Assassinations & Targetings'}</span>
+                  </h3>
+
+                  {(!historicalEventsData?.assassinations || historicalEventsData.assassinations.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic p-3 rounded-xl border border-slate-800 bg-slate-900/40">
+                      {isAr ? 'لم تسجل اغتيالات سياسية كبرى معلنة في قاعدة البيانات الرسمية لهذه الدولة.' : 'No major political assassinations recorded in current database.'}
+                    </p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {historicalEventsData.assassinations.map((assassin, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-rose-500/30 bg-slate-950/80 p-3.5 space-y-2 hover:border-rose-500/50 transition"
+                        >
+                          <div className="flex items-start justify-between gap-2.5 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="grid h-7 w-7 place-items-center rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-400 font-mono text-xs font-black">
+                                0{idx + 1}
+                              </span>
+                              <div>
+                                <h4 className="m-0 text-xs sm:text-sm font-black text-white">
+                                  {isAr ? assassin.targetAr : (assassin.targetEn || assassin.targetAr)}
+                                </h4>
+                                <span className="text-[10px] text-rose-300 font-bold block mt-0.5">
+                                  {isAr ? 'الجهة المنفذة:' : 'Perpetrator:'} {isAr ? assassin.perpetratorAr : (assassin.perpetratorEn || assassin.perpetratorAr)}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="font-mono text-xs font-bold text-rose-300 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded shrink-0">
+                              {assassin.year}
+                            </span>
+                          </div>
+
+                          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-200 leading-relaxed">
+                            <span className="font-bold text-slate-400 block mb-0.5">
+                              {isAr ? 'تفاصيل الواقعة ومسرح الحدث:' : 'Operational Details:'}
+                            </span>
+                            {isAr ? assassin.detailsAr : (assassin.detailsEn || assassin.detailsAr)}
+                          </div>
+
+                          {(assassin.impactAr || assassin.impactEn) && (
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-2 text-xs text-amber-200 leading-relaxed">
+                              <span className="font-bold text-amber-400 block mb-0.5">
+                                {isAr ? 'التداعيات السيادية والسياسية:' : 'Sovereign Political Impact:'}
+                              </span>
+                              {isAr ? assassin.impactAr : (assassin.impactEn || assassin.impactAr)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. قسم العمليات الإرهابية ومكافحة الإرهاب */}
+              {(eventsFilter === 'all' || eventsFilter === 'terror') && (
+                <div className="space-y-3">
+                  <h3 className="m-0 text-sm font-black text-amber-400 flex items-center gap-2 border-b border-amber-500/20 pb-2">
+                    <AlertOctagon className="h-4 w-4" />
+                    <span>{isAr ? 'العمليات الإرهابية ومحطات مكافحة الإرهاب' : 'Terrorist Incidents & Counter-Terrorism Operations'}</span>
+                  </h3>
+
+                  {(!historicalEventsData?.terrorEvents || historicalEventsData.terrorEvents.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic p-3 rounded-xl border border-slate-800 bg-slate-900/40">
+                      {isAr ? 'لا توجد حوادث إرهابية كبرى مسجلة في هذا السجل.' : 'No major terrorist incidents recorded in current database.'}
+                    </p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {historicalEventsData.terrorEvents.map((terror, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-amber-500/30 bg-slate-950/80 p-3.5 space-y-2 hover:border-amber-500/50 transition"
+                        >
+                          <div className="flex items-start justify-between gap-2.5 flex-wrap">
+                            <div className="min-w-0">
+                              <h4 className="m-0 text-xs sm:text-sm font-black text-white">
+                                {isAr ? terror.titleAr : (terror.titleEn || terror.titleAr)}
+                              </h4>
+                              <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
+                                {isAr ? 'التنظيم / الجهة المسؤولة:' : 'Perpetrator Group:'} {isAr ? terror.groupAr : (terror.groupEn || terror.groupAr)}
+                              </span>
+                            </div>
+                            <span className="font-mono text-xs font-bold text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded shrink-0">
+                              {terror.year}
+                            </span>
+                          </div>
+
+                          {terror.casualties && (
+                            <div className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/30 bg-rose-950/40 px-2 py-0.5 text-[11px] font-bold text-rose-300">
+                              <BadgeAlert className="h-3 w-3" />
+                              <span>{isAr ? 'الضحايا والخسائر:' : 'Casualties:'} {terror.casualties}</span>
+                            </div>
+                          )}
+
+                          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-200 leading-relaxed">
+                            <span className="font-bold text-slate-400 block mb-0.5">
+                              {isAr ? 'تفاصيل وملابسات الهجوم:' : 'Incident Details:'}
+                            </span>
+                            {isAr ? terror.detailsAr : (terror.detailsEn || terror.detailsAr)}
+                          </div>
+
+                          {(terror.counterMeasureAr || terror.counterMeasureEn) && (
+                            <div className="rounded-lg border border-emerald-500/20 bg-emerald-950/20 p-2 text-xs text-emerald-200 leading-relaxed">
+                              <span className="font-bold text-emerald-400 block mb-0.5">
+                                {isAr ? 'إجراءات الدولة والردع الأمني:' : 'State Countermeasures & Security Response:'}
+                              </span>
+                              {isAr ? terror.counterMeasureAr : (terror.counterMeasureEn || terror.counterMeasureAr)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. قسم التصاعدات والحروب والأزمات مع الدول الأجنبية */}
+              {(eventsFilter === 'all' || eventsFilter === 'escalations') && (
+                <div className="space-y-3">
+                  <h3 className="m-0 text-sm font-black text-purple-400 flex items-center gap-2 border-b border-purple-500/20 pb-2">
+                    <Swords className="h-4 w-4" />
+                    <span>{isAr ? 'التصاعدات والحروب والأزمات مع الدول الأجنبية' : 'Foreign Escalations, Conflicts & International Standoffs'}</span>
+                  </h3>
+
+                  {(!historicalEventsData?.foreignEscalations || historicalEventsData.foreignEscalations.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic p-3 rounded-xl border border-slate-800 bg-slate-900/40">
+                      {isAr ? 'لم تسجل تصاعدات عسكرية أو حروب خارجية مباشرة في هذا السجل.' : 'No major foreign escalations recorded in current database.'}
+                    </p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {historicalEventsData.foreignEscalations.map((esc, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-purple-500/30 bg-slate-950/80 p-3.5 space-y-2 hover:border-purple-500/50 transition"
+                        >
+                          <div className="flex items-start justify-between gap-2.5 flex-wrap">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="m-0 text-xs sm:text-sm font-black text-white">
+                                  {isAr ? esc.titleAr : (esc.titleEn || esc.titleAr)}
+                                </h4>
+                                <span
+                                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                                    esc.nature === 'military_conflict'
+                                      ? 'bg-rose-950/70 border-rose-500/40 text-rose-300'
+                                      : esc.nature === 'border_escalation'
+                                      ? 'bg-amber-950/70 border-amber-500/40 text-amber-300'
+                                      : 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300'
+                                  }`}
+                                >
+                                  {esc.nature === 'military_conflict'
+                                    ? (isAr ? 'نزاع عسكري / حرب' : 'War / Armed Conflict')
+                                    : esc.nature === 'border_escalation'
+                                    ? (isAr ? 'تصعيد حدودي' : 'Border Escalation')
+                                    : (isAr ? 'أزمة دبلوماسية' : 'Diplomatic Crisis')}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-purple-300 font-bold block mt-0.5">
+                                {isAr ? 'الدولة الخصم / الطرف المقابل:' : 'Opponent State / Belligerents:'} {isAr ? esc.opponentCountryAr : (esc.opponentCountryEn || esc.opponentCountryAr)}
+                              </span>
+                            </div>
+                            <span className="font-mono text-xs font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded shrink-0">
+                              {esc.year}
+                            </span>
+                          </div>
+
+                          {(esc.causeAr || esc.causeEn) && (
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-2 text-xs text-slate-300">
+                              <b className="text-slate-400">{isAr ? 'أسباب التصاعد:' : 'Underlying Cause:'} </b>
+                              <span>{isAr ? esc.causeAr : (esc.causeEn || esc.causeAr)}</span>
+                            </div>
+                          )}
+
+                          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-200 leading-relaxed">
+                            <span className="font-bold text-slate-400 block mb-0.5">
+                              {isAr ? 'مجريات وتفاصيل المواجهة:' : 'Conflict Narrative & Evolution:'}
+                            </span>
+                            {isAr ? esc.detailsAr : (esc.detailsEn || esc.detailsAr)}
+                          </div>
+
+                          {(esc.outcomeAr || esc.outcomeEn) && (
+                            <div className="rounded-lg border border-indigo-500/20 bg-indigo-950/20 p-2 text-xs text-indigo-200 leading-relaxed">
+                              <span className="font-bold text-indigo-400 block mb-0.5">
+                                {isAr ? 'النتائج واتفاقيات وقف إطلاق النار / السلام:' : 'Strategic Outcome & Accords:'}
+                              </span>
+                              {isAr ? esc.outcomeAr : (esc.outcomeEn || esc.outcomeAr)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 8. تبويب المعاهدات والتحالفات العسكرية والتكتلات الاقتصادية */}
+          {activeTab === 'treaties' && (
+            <div className="space-y-4">
+              {/* لوحة التحالفات العسكرية والتكتلات الاقتصادية والدول الأعضاء */}
+              <CountryAlliancesSidePanel
+                country={country}
+                lang={lang}
+                compact
+              />
+
+              {/* المعاهدات والاتفاقيات الدولية الإضافية */}
+              {(extendedIntel?.treaties && extendedIntel.treaties.length > 0) && (
+                <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                  <h4 className="m-0 text-xs font-black text-slate-300 flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>{isAr ? 'المعاهدات الثنائية والترتيبات الأمنية الإضافية:' : 'Additional Bilateral Security Treaties:'}</span>
+                  </h4>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {extendedIntel.treaties.map((treaty, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 space-y-1"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <h5 className="m-0 text-xs font-bold text-white flex items-center gap-1.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                            <span>{isAr ? treaty.nameAr : treaty.nameEn}</span>
+                          </h5>
+                          {treaty.year && <span className="font-mono text-[10px] text-slate-500">{treaty.year}</span>}
+                        </div>
+                        <p className="m-0 text-[11px] text-slate-300 leading-relaxed">
+                          {isAr ? treaty.scopeAr : treaty.scopeEn}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

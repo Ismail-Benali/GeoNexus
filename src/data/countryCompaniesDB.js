@@ -144,6 +144,61 @@ export const COUNTRY_COMPANIES_DB = {
     { name: 'التجاري وفا بنك (Attijariwafa Bank)', sectorAr: 'الخدمات المصرفية والاستثمارية الإفريقية', sectorEn: 'Pan-African Banking Group', type: 'global', valuation: '$15B', roleAr: 'أكبر بنك في المغرب وشمال إفريقيا مع تواجد في أكثر من 25 دولة إفريقية وأوروبية.', roleEn: 'Largest banking institution in North Africa with extensive African network.' },
     { name: 'مجموعة مناجم (Managem Group)', sectorAr: 'التعدين والمعادن الاستراتيجية والذهب والفضة', sectorEn: 'Mining & Critical Minerals', type: 'local', valuation: '$3.5B', roleAr: 'شركة تعدين رائدة في استخراج الكوبالت والليثيوم والذهب في أفريقيا.', roleEn: 'Leading mining conglomerate producing cobalt, gold and base metals.' },
   ],
+
+  // دولة قطر
+  qa: [
+    { name: 'قطر للطاقة (QatarEnergy)', sectorAr: 'الغاز الطبيعي المسال والنفط والبتروكيماويات', sectorEn: 'LNG, Gas & Petrochemicals', type: 'global', valuation: '$180B+', roleAr: 'أكبر منتج ومصدر للغاز الطبيعي المسال في العالم والمسؤولة عن توسعة حقل الشمال.', roleEn: 'World’s premier LNG supplier and operator of North Field expansion.' },
+    { name: 'مجموعة بنك قطر الوطني (QNB Group)', sectorAr: 'الخدمات المصرفية والتمويل الدولي', sectorEn: 'Banking & Financial Markets', type: 'global', valuation: '$48B', roleAr: 'أكبر مؤسسة مصرفية في منطقة الشرق الأوسط وإفريقيا بحجم الأصول.', roleEn: 'Largest financial institution in the Middle East and Africa by assets.' },
+    { name: 'الخطوط الجوية القطرية (Qatar Airways)', sectorAr: 'الطيران والنقل الجوي الدولي', sectorEn: 'Global Aviation & Air Cargo', type: 'global', valuation: '$22B', roleAr: 'أفضل شركة طيران في العالم الحائزة على جوائز سكاي تراكس العالمية لمرات قياسية.', roleEn: 'Award-winning global airline connecting over 170 destinations.' },
+    { name: 'مجموعة أُريدُ (Ooredoo Group)', sectorAr: 'الاتصالات والشبكات والخدمات الرقمية', sectorEn: 'Telecommunications & ICT', type: 'global', valuation: '$12B', roleAr: 'تكتل اتصالات دولي يقدم خدماته لأكثر من 100 مليون عميل عبر 10 دول.', roleEn: 'International telecom operator with presence in 10 countries across MENA and Asia.' },
+    { name: 'صناعات قطر (Industries Qatar)', sectorAr: 'البتروكيماويات والصلب والأسمدة الكيماوية', sectorEn: 'Petrochemicals, Steel & Fertilizers', type: 'local', valuation: '$26B', roleAr: 'أحد أكبر التكتلات الصناعية التحويلية في الخليج العربي.', roleEn: 'Major petrochemical, fertilizer, and industrial conglomerate in the GCC.' },
+  ],
+
+  // دولة الكويت
+  kw: [
+    { name: 'مؤسسة البترول الكويتية (KPC)', sectorAr: 'النفط الخام والتكرير والبتروكيماويات', sectorEn: 'National Hydrocarbons Corporation', type: 'global', valuation: '$120B+', roleAr: 'المؤسسة السيادية المشرفة على إنتاج وتكرير 3 ملايين برميل نفط يومياً.', roleEn: 'State corporation managing upstream oil production and mega refineries.' },
+    { name: 'بنك الكويت الوطني (NBK)', sectorAr: 'الخدمات المصرفية والاستثمار', sectorEn: 'Banking & Financial Services', type: 'global', valuation: '$32B', roleAr: 'أقدم وأكبر بنك كويتي ومؤسسة مصرفية إقليمية رائدة بأعلى التصنيفات الائتمانية.', roleEn: 'Premier Kuwaiti bank with extensive network across London, NY and MENA.' },
+    { name: 'مجموعة زين للاتصالات (Zain Group)', sectorAr: 'الاتصالات والتحول الرقمي المالي', sectorEn: 'Telecom & Digital Fintech', type: 'global', valuation: '$8.5B', roleAr: 'رائدة الاتصالات المتنقلة والمدفوعات الإلكترونية عبر 7 دول عربية وإفريقية.', roleEn: 'Pioneer in mobile telecommunications serving 52 million customers.' },
+    { name: 'شركة أجيليتي للمخازن العمومية (Agility)', sectorAr: 'اللوجستيات وسلاسل الإمداد العالمية والبنية التحتية', sectorEn: 'Global Supply Chain & Logistics', type: 'global', valuation: '$7.8B', roleAr: 'أحد أكبر مشغلي الخدمات اللوجستية والمستودعات في العالم.', roleEn: 'Global leader in supply chain services, infrastructure, and airport services.' },
+  ],
+
+  // سلطنة عمان
+  om: [
+    { name: 'شركة تنمية نفط عمان (PDO)', sectorAr: 'استكشاف وإنتاج النفط والغاز', sectorEn: 'Petroleum Exploration & Production', type: 'global', valuation: '$45B', roleAr: 'المحرك الرئيسي لإنتاج النفط والغاز والمشاريع الهيدروكربونية في سلطنة عمان.', roleEn: 'Leading exploration and production company in the Sultanate of Oman.' },
+    { name: 'مجموعة أوكيو (OQ Global Energy)', sectorAr: 'الطاقة المتكاملة والبتروكيماويات والمصافي', sectorEn: 'Integrated Energy & Petrochemicals', type: 'global', valuation: '$32B', roleAr: 'الذراع الاستثمارية السيادية في الطاقة ومطورة مصفاة الدقم ومجمعات اللدائن.', roleEn: 'Sovereign integrated energy group operating Duqm Refinery and green fuels.' },
+    { name: 'بنك مسقط (Bank Muscat)', sectorAr: 'الخدمات المصرفية الإسلامية والتجارية', sectorEn: 'Banking & Financial Markets', type: 'local', valuation: '$6.5B', roleAr: 'أكبر مؤسسة مصرفية في سلطنة عمان وممول رئيسي للمشروعات التنموية.', roleEn: 'Premier financial services institution in the Sultanate of Oman.' },
+    { name: 'مجموعة أسياد (ASYAD Group)', sectorAr: 'الموانئ والمناطق الحرة والخدمات اللوجستية', sectorEn: 'Integrated Logistics & Free Zones', type: 'global', valuation: '$5.5B', roleAr: 'المشغل الوطني للموانئ العمانية وسفن الشحن والمناطق الحرة بالدقم وصلالة وصحار.', roleEn: 'Oman’s integrated logistics provider operating ports, dry docks and fleet.' },
+  ],
+
+  // مملكة البحرين
+  bh: [
+    { name: 'شركة ألمنيوم البحرين (ألبا - Alba)', sectorAr: 'صهر وإنتاج الألمنيوم عالي النقاء', sectorEn: 'Aluminum Smelting & Manufacturing', type: 'global', valuation: '$6.2B', roleAr: 'أكبر مصهر ألمنيوم في موقع واحد في العالم خارج الصين بطاقة 1.6 مليون طن.', roleEn: 'World’s largest aluminum smelter ex-China producing 1.6M metric tonnes annually.' },
+    { name: 'شركة نفط البحرين (بابكو إنرجيز - Bapco Energies)', sectorAr: 'تكرير النفط والطاقة المتجددة', sectorEn: 'Energy & Refining Mega-complex', type: 'local', valuation: '$14B', roleAr: 'أول شركة نفط في الخليج ومطورة مشروع تحديث مصفاة بابكو العملاقة.', roleEn: 'Pioneer energy enterprise driving Bahrain’s modern refinery expansion.' },
+    { name: 'المؤسسة العربية المصرفية (Bank ABC)', sectorAr: 'المصارف الدولية وتمويل التجارة', sectorEn: 'International Wholesale Banking', type: 'global', valuation: '$4.5B', roleAr: 'مجموعة مصرفية دولية كبرى مقرها المنامة وتعمل في أوروبا وأمريكا والخليج.', roleEn: 'Leading international bank headquartered in Manama with global network.' },
+  ],
+
+  // المملكة الأردنية الهاشمية
+  jo: [
+    { name: 'شركة مناجم الفوسفات الأردنية (JPMC)', sectorAr: 'التعدين وإنتاج الأسمدة الفوسفاتية', sectorEn: 'Phosphate Mining & Fertilizers', type: 'global', valuation: '$4.5B', roleAr: 'واحدة من أكبر منتجي ومصدري الفوسفات الخام والأسمدة المركبة عالمياً.', roleEn: 'World’s second-largest exporter and sixth-largest producer of phosphate.' },
+    { name: 'شركة البوتاس العربية (Arab Potash - APC)', sectorAr: 'استخراج البوتاس وأملاح البحر الميت', sectorEn: 'Potash Extraction & Solar Evaporation', type: 'global', valuation: '$5.2B', roleAr: 'المنتج العربي الوحيد للبوتاس وثامن أكبر منتج للبوتاس في العالم.', roleEn: 'Sole Arab potash producer utilizing Dead Sea solar evaporation basins.' },
+    { name: 'البنك العربي (Arab Bank)', sectorAr: 'الخدمات المصرفية الدولية والتمويل التجاري', sectorEn: 'Banking & Financial Institutions', type: 'global', valuation: '$7.5B', roleAr: 'أعرق تكتل مصرفي عربي تأسس عام 1930 ويمتلك شبكة منتشرة عبر 5 قارات.', roleEn: 'Historic pan-Arab banking institution operating across 5 continents.' },
+    { name: 'شركة أدوية الحكمة (Hikma Pharmaceuticals)', sectorAr: 'الصناعات الدوائية والعلاجات الجنيسة المتقدمة', sectorEn: 'Pharmaceuticals & Generics', type: 'global', valuation: '$6.0B', roleAr: 'تكتل دوائي عالمي مدرج في بورصة لندن ومورد رئيسي للأدوية للولايات المتحدة وأوروبا.', roleEn: 'Global pharmaceuticals giant listed on LSE supplying US and European markets.' },
+  ],
+
+  // جمهورية العراق
+  iq: [
+    { name: 'شركة نفط البصرة (BOC - Basra Oil)', sectorAr: 'استخراج وتصدير النفط الخام', sectorEn: 'Upstream Crude Extraction', type: 'global', valuation: '$75B+', roleAr: 'العملاق النفطي العراقي المسؤول عن تصدير أكثر من 70% من النفط الوطني.', roleEn: 'Core Iraqi state oil company producing over 3 million barrels per day.' },
+    { name: 'المصرف العراقي للتجارة (TBI)', sectorAr: 'تمويل التجارة الخارجية وإعادة الإعمار', sectorEn: 'Trade Finance & Commercial Banking', type: 'local', valuation: '$4.2B', roleAr: 'المؤسسة المصرفية الحكومية الرائدة لتمويل المشروعات التنموية والتجارة الخارجية.', roleEn: 'Primary state financial institution facilitating foreign trade and reconstruction.' },
+    { name: 'شركة توزيع المنتجات النفطية (OPDC)', sectorAr: 'توزيع وتكرير المشتقات النفطية', sectorEn: 'Petroleum Distribution & Pipelines', type: 'local', valuation: '$8.0B', roleAr: 'المسؤولة عن إدارة شبكات الأنابيب والمستودعات ومحطات توزيع الوقود في العراق.', roleEn: 'National petroleum logistics and distribution network operator.' },
+  ],
+
+  // جمهورية كوريا الجنوبية
+  kr: [
+    { name: 'سامسونغ للإلكترونيات (Samsung Electronics)', sectorAr: 'أشباه الموصلات والرقائق والهواتف الذكية', sectorEn: 'Semiconductors, Memory & Mobile', type: 'global', valuation: '$380B', roleAr: 'أكبر منتج لرقائق الذاكرة (DRAM & NAND) والهواتف الذكية وشاشات OLED عالمياً.', roleEn: 'World’s premier memory chipmaker and consumer electronics giant.' },
+    { name: 'مجموعة هيونداي موتور (Hyundai Motor Group)', sectorAr: 'السيارات والبطاريات والمركبات الكهربائية', sectorEn: 'Automotive & Clean Mobility', type: 'global', valuation: '$55B', roleAr: 'ثالث أكبر صانع سيارات في العالم ومطور طرازات كيا وجينيسيس الكهربائية.', roleEn: 'World’s third-largest automotive group advancing EV platforms.' },
+    { name: 'إس كيه هاينكس (SK Hynix)', sectorAr: 'رقائق الذاكرة فائقة السرعة للذكاء الاصطناعي (HBM)', sectorEn: 'High-Bandwidth Memory (HBM) & AI Silicon', type: 'global', valuation: '$95B', roleAr: 'المحتكر العالمي لرقائق الذاكرة HBM3E الموردة لمعالجات إنفيديا للذكاء الاصطناعي.', roleEn: 'Dominant global supplier of HBM chips for NVIDIA generative AI processors.' },
+    { name: 'هانوا للدفاع (Hanwha Aerospace)', sectorAr: 'الصناعات الدفاعية والمدافع الصاروخية ومحركات الفضاء', sectorEn: 'Defense, Artillery (K9) & Space', type: 'global', valuation: '$14B', roleAr: 'مصنعة مدافع هاوتزر K9 ثندر الشهيرة التي تعتمدها دول الناتو ودول الخليج.', roleEn: 'Leading defense contractor exporting K9 self-propelled howitzers globally.' },
+  ],
 };
 
 /**
