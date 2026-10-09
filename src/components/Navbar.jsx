@@ -14,6 +14,7 @@ import {
   Crown,
   Database,
   Coins,
+  Target,
 } from 'lucide-react';
 
 export default function Navbar({
@@ -23,12 +24,14 @@ export default function Navbar({
   activeTab,
   setActiveTab,
   onOpenComparison,
+  onOpenBilateralTreaties,
 }) {
   const isAr = lang === 'ar';
 
   const tabs = [
     { id: 'map', label: isAr ? 'الخريطة الحية' : 'Live Map', icon: Globe },
     { id: 'alliances', label: isAr ? 'التحالفات والتكتلات' : 'Alliances Matrix', icon: Shield, badge: '13' },
+    { id: 'bilateral-treaties', label: isAr ? 'المعاهدات والبنود الثنائية' : 'Bilateral Pacts & Clauses', icon: Target, badge: 'NEW' },
     { id: 'currency', label: isAr ? 'تقلبات العملات (10 سنوات)' : 'Currency 10Y FX', icon: Coins, badge: 'FX' },
     { id: 'arms', label: isAr ? 'صفقات السلاح (SIPRI)' : 'Arms Deals', icon: Crosshair, badge: 'SIPRI' },
     { id: 'un-votes', label: isAr ? 'تصويت الأمم المتحدة' : 'UN Voting Matrix', icon: Vote, badge: 'UN' },
@@ -78,6 +81,18 @@ export default function Navbar({
               <Swords className="h-4 w-4 text-amber-400 transition group-hover:rotate-12" />
               <span className="hidden sm:inline">{isAr ? 'مقارنة عسكرية' : 'Compare'}</span>
               <span className="rounded bg-amber-500/20 border border-amber-500/40 px-1 py-0.2 text-[9px] font-mono text-amber-200">VS</span>
+            </button>
+
+            {/* زر المعاهدات الثنائية والبنود الاستراتيجية */}
+            <button
+              onClick={() => onOpenBilateralTreaties?.()}
+              aria-label={isAr ? 'المعاهدات الثنائية والبنود' : 'Bilateral Treaties'}
+              title={isAr ? 'مركز المعاهدات الثنائية والبنود الاستراتيجية وغايات التحالف' : 'Bilateral Treaties & Strategic Clauses Hub'}
+              className="group flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 to-indigo-500/15 px-3 py-1.5 text-xs font-bold text-amber-300 shadow-sm transition hover:border-amber-400 hover:bg-amber-500/30"
+            >
+              <Target className="h-4 w-4 text-amber-400 transition group-hover:rotate-45" />
+              <span className="hidden md:inline">{isAr ? 'معاهدات وبنود' : 'Treaties'}</span>
+              <span className="rounded bg-amber-500/25 border border-amber-500/40 px-1 py-0.2 text-[9px] font-mono text-amber-200">PACT</span>
             </button>
 
             <button

@@ -1,3 +1,5 @@
+import { getBilateralTreatiesForCountry } from './bilateralTreatiesAndAlliancesDB.js';
+
 /**
  * قاعدة البيانات الشاملة للتحالفات العسكرية والتكتلات الاقتصادية لجميع الدول
  * Comprehensive Sovereign Alliances, Treaties & Blocs Matrix (Military & Economic)
@@ -671,6 +673,208 @@ export const COUNTRY_ALLIANCES_REGISTRY = {
       arab_league: { ar: 'الوصاية الهاشمية التاريخية على المقدسات وركيزة الاستقرار والأمن الإقليمي في المشرق', en: 'Hashemite Custodianship of Holy Sites & Levantine Security Anchor' },
     },
   },
+
+  // دولة فلسطين
+  ps: {
+    countryId: 'ps',
+    nameAr: 'دولة فلسطين',
+    nameEn: 'State of Palestine',
+    flag: '🇵🇸',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'القضية المركزية للأمة العربية، الصمود الوطني والدفاع عن الهوية والقدس الشريف والمقدسات', en: 'Central Pan-Arab Cause, Sovereign Steadfastness & Jerusalem Defense' },
+    },
+  },
+
+  // الجمهورية العربية السورية
+  sy: {
+    countryId: 'sy',
+    nameAr: 'الجمهورية العربية السورية',
+    nameEn: 'Syria',
+    flag: '🇸🇾',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'قلب العروبة النابض وموقع جيوسياسي محوري في بلاد الشام والمشرق العربي', en: 'Levantine Geopolitical Crossroads & Historic Arab Pillar' },
+    },
+  },
+
+  // الجمهورية اللبنانية
+  lb: {
+    countryId: 'lb',
+    nameAr: 'الجمهورية اللبنانية',
+    nameEn: 'Lebanon',
+    flag: '🇱🇧',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'بوابة المشرق الثقافية، الصمود في خط المواجهة الجنوبي وحقول غاز شرق المتوسط', en: 'Levantine Gateway, Southern Frontline Defense & EastMed Gas Reserves' },
+    },
+  },
+
+  // سلطنة عُمان
+  om: {
+    countryId: 'om',
+    nameAr: 'سلطنة عُمان',
+    nameEn: 'Oman',
+    flag: '🇴🇲',
+    alliances: ['gcc', 'opec_plus', 'arab_league'],
+    customRoles: {
+      gcc: { ar: 'حراسة مضيق هرمز وبوابة المحيط الهندي والدبلوماسية الهادئة للوساطة الإقليمية', en: 'Strait of Hormuz Co-Steward, Indian Ocean Gate & Premier Quiet Mediator' },
+      opec_plus: { ar: 'منتج موثوق للنفط خارج أوبك واحتياطيات استراتيجية داعمة لاستقرار الأسواق', en: 'Reliable Non-OPEC Crude Producer Supporting Market Stability' },
+      arab_league: { ar: 'الدبلوماسية الحكيمة ونزع فتيل الأزمات بين القوى الكبرى في الشرق الأوسط', en: 'Diplomatic Bridge-Builder De-escalating Regional Conflicts' },
+    },
+  },
+
+  // مملكة البحرين
+  bh: {
+    countryId: 'bh',
+    nameAr: 'مملكة البحرين',
+    nameEn: 'Bahrain',
+    flag: '🇧🇭',
+    alliances: ['gcc', 'opec_plus', 'arab_league'],
+    customRoles: {
+      gcc: { ar: 'المركز المصرفي والمالي الإسلامي واستضافة مقر الأسطول الخامس الأمريكي وتأمين الملاحة', en: 'Islamic Banking Capital, US 5th Fleet Host & Gulf Maritime Security Anchor' },
+      opec_plus: { ar: 'تاريخ عريق كأول مكتشف للنفط في الخليج وصناعات تكرير وألمنيوم متقدمة', en: 'First Gulf Oil Discoverer & Advanced Refining/Aluminum Industrial Hub' },
+      arab_league: { ar: 'رئاسة القمة العربية 2024 والدفع نحو السلام الإقليمي والاستقرار الأمني', en: 'Arab League Summit Host 2024 & Regional Stability Advocate' },
+    },
+  },
+
+  // الجمهورية اليمنية
+  ye: {
+    countryId: 'ye',
+    nameAr: 'الجمهورية اليمنية',
+    nameEn: 'Yemen',
+    flag: '🇾🇪',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'حراسة مضيق باب المندب الحيوي وخليج عدن والموقع الجغرافي المتحكم بجنوب البحر الأحمر', en: 'Bab el-Mandeb Chokepoint Gatekeeper & Southern Red Sea Maritime Controller' },
+    },
+  },
+
+  // جمهورية السودان
+  sd: {
+    countryId: 'sd',
+    nameAr: 'جمهورية السودان',
+    nameEn: 'Sudan',
+    flag: '🇸🇩',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'سلة الغذاء العربي الاستراتيجية، تأمين ساحل البحر الأحمر والعمق الأفريقي', en: 'Strategic Arab Food Basket, Red Sea Coastline & African Geopolitical Depth' },
+    },
+  },
+
+  // دولة ليبيا
+  ly: {
+    countryId: 'ly',
+    nameAr: 'دولة ليبيا',
+    nameEn: 'Libya',
+    flag: '🇱🇾',
+    alliances: ['arab_league', 'opec_plus'],
+    customRoles: {
+      arab_league: { ar: 'أكبر احتياطي نفطي في القارة الأفريقية وبوابة شمال أفريقيا على وسط البحر المتوسط', en: 'Largest Proven Oil Reserves in Africa & Central Mediterranean Gate' },
+      opec_plus: { ar: 'خام السدرة عالي الجودة ودور أساسي في أمن الطاقة لدول جنوب أوروبا', en: 'Sweet Light Crude Supplier Critical for Southern European Refineries' },
+    },
+  },
+
+  // الجمهورية التونسية
+  tn: {
+    countryId: 'tn',
+    nameAr: 'الجمهورية التونسية',
+    nameEn: 'Tunisia',
+    flag: '🇹🇳',
+    alliances: ['arab_league'],
+    customRoles: {
+      arab_league: { ar: 'حراسة مضيق صقلية وربط الحوضين الشرقي والغربي للبحر الأبيض المتوسط', en: 'Strait of Sicily Guardian & Link between Eastern/Western Mediterranean' },
+    },
+  },
+
+  // إسرائيل
+  il: {
+    countryId: 'il',
+    nameAr: 'إسرائيل',
+    nameEn: 'Israel',
+    flag: '🇮🇱',
+    alliances: [],
+    customRoles: {},
+  },
+
+  // جمهورية كوريا الجنوبية
+  kr: {
+    countryId: 'kr',
+    nameAr: 'جمهورية كوريا الجنوبية',
+    nameEn: 'South Korea',
+    flag: '🇰🇷',
+    alliances: [],
+    customRoles: {},
+  },
+
+  // جمهورية كوريا الديمقراطية الشعبية (كوريا الشمالية)
+  kp: {
+    countryId: 'kp',
+    nameAr: 'جمهورية كوريا الديمقراطية الشعبية',
+    nameEn: 'North Korea',
+    flag: '🇰🇵',
+    alliances: [],
+    customRoles: {},
+  },
+
+  // جمهورية باكستان الإسلامية
+  pk: {
+    countryId: 'pk',
+    nameAr: 'جمهورية باكستان الإسلامية',
+    nameEn: 'Pakistan',
+    flag: '🇵🇰',
+    alliances: ['sco'],
+    customRoles: {
+      sco: { ar: 'القوة النووية الإسلامية الوحيدة، وميناء جوادر وممر الصين-باكستان الاقتصادي (CPEC)', en: 'Sole Islamic Nuclear Power, Gwadar Port & Core CPEC Geopolitical Gateway' },
+    },
+  },
+
+  // جمهورية أذربيجان
+  az: {
+    countryId: 'az',
+    nameAr: 'جمهورية أذربيجان',
+    nameEn: 'Azerbaijan',
+    flag: '🇦🇿',
+    alliances: ['opec_plus'],
+    customRoles: {
+      opec_plus: { ar: 'مورد الغاز الاستراتيجي لأوروبا عبر الممر الجنوبي ومفترق طرق بحر قزوين', en: 'Southern Gas Corridor European Supplier & Caspian Strategic Hub' },
+    },
+  },
+
+  // أستراليا
+  au: {
+    countryId: 'au',
+    nameAr: 'أستراليا',
+    nameEn: 'Australia',
+    flag: '🇦🇺',
+    alliances: ['aukus', 'quad'],
+    customRoles: {
+      aukus: { ar: 'الركيزة الأمامية في المحيطين الهندي والهادئ ومشروع الغواصات النووية الهجومية', en: 'Indo-Pacific Forward Anchor & SSN-AUKUS Nuclear Attack Submarine Lead' },
+      quad: { ar: 'تأمين الممرات البحرية الجنوبية ومراقبة تحركات الأساطيل والتعدين الحرج', en: 'Southern Maritime Domain Awareness & Critical Minerals Supply' },
+    },
+  },
+
+  // أوكرانيا
+  ua: {
+    countryId: 'ua',
+    nameAr: 'أوكرانيا',
+    nameEn: 'Ukraine',
+    flag: '🇺🇦',
+    alliances: [],
+    customRoles: {},
+  },
+
+  // جمهورية بيلاروسيا
+  by: {
+    countryId: 'by',
+    nameAr: 'جمهورية بيلاروسيا',
+    nameEn: 'Belarus',
+    flag: '🇧🇾',
+    alliances: ['sco'],
+    customRoles: {
+      sco: { ar: 'عضو جديد (2024)، الجناح العسكري الغربي لدولة الاتحاد والردع النووي التكتيكي', en: 'New Member 2024, Western Union State Bastion & Tactical Nuclear Host' },
+    },
+  },
 };
 
 /**
@@ -694,6 +898,23 @@ export function getCountryAlliancesData(countryId) {
     lebanon: 'lb',
     kuwait: 'kw',
     jordan: 'jo',
+    palestine: 'ps',
+    yemen: 'ye',
+    sudan: 'sd',
+    oman: 'om',
+    bahrain: 'bh',
+    libya: 'ly',
+    tunisia: 'tn',
+    israel: 'il',
+    korea: 'kr',
+    southkorea: 'kr',
+    northkorea: 'kp',
+    dprk: 'kp',
+    pakistan: 'pk',
+    azerbaijan: 'az',
+    australia: 'au',
+    ukraine: 'ua',
+    belarus: 'by',
     russia: 'ru',
     china: 'cn',
     germany: 'de',
@@ -715,6 +936,7 @@ export function getCountryAlliancesData(countryId) {
 
   const key = ALIASES[normalized] || normalized;
   const registryEntry = COUNTRY_ALLIANCES_REGISTRY[key];
+  const bilateralTreaties = getBilateralTreatiesForCountry(key);
 
   // إذا كانت الدولة مسجلة رسمياً في السجل
   if (registryEntry) {
@@ -755,6 +977,15 @@ export function getCountryAlliancesData(countryId) {
         if (m.id !== key) uniqueAlliedCountries.add(m.id);
       });
     });
+    bilateralTreaties.forEach((t) => {
+      if (t.country1.id !== key) uniqueAlliedCountries.add(t.country1.id);
+      if (t.country2.id !== key) uniqueAlliedCountries.add(t.country2.id);
+      if (t.additionalMembers) {
+        t.additionalMembers.forEach((m) => {
+          if (m.id !== key) uniqueAlliedCountries.add(m.id);
+        });
+      }
+    });
 
     return {
       countryId: key,
@@ -764,10 +995,12 @@ export function getCountryAlliancesData(countryId) {
       totalAlliancesCount: populatedAlliances.length,
       militaryAlliancesCount: militaryAlliances.length,
       economicAlliancesCount: economicAlliances.length,
+      bilateralTreatiesCount: bilateralTreaties.length,
       totalAlliedNationsCount: uniqueAlliedCountries.size,
       alliances: populatedAlliances,
       militaryAlliances,
       economicAlliances,
+      bilateralTreaties,
     };
   }
 
@@ -816,9 +1049,11 @@ export function getCountryAlliancesData(countryId) {
     totalAlliancesCount: 1,
     militaryAlliancesCount: 1,
     economicAlliancesCount: 1,
-    totalAlliedNationsCount: 2,
+    bilateralTreatiesCount: bilateralTreaties.length,
+    totalAlliedNationsCount: 2 + bilateralTreaties.length,
     alliances: [defaultAlliance],
     militaryAlliances: [defaultAlliance],
     economicAlliances: [defaultAlliance],
+    bilateralTreaties,
   };
 }

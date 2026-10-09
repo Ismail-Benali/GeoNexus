@@ -4505,16 +4505,23 @@ const COUNTRY_ID_ALIASES = {
   southafrica: 'za',
 };
 
+import { getCountryTimelineYearEvents } from './timelineYearEventsDB.js';
+
 export function getCountryHistoricalEventsData(countryId) {
   if (!countryId) return null;
   const normalized = countryId.toLowerCase().trim();
   const resolvedId = COUNTRY_ID_ALIASES[normalized] || normalized;
   
+  const timelineEvents = getCountryTimelineYearEvents(resolvedId);
+
   if (COUNTRY_HISTORICAL_EVENTS_DB[resolvedId]) {
-    return COUNTRY_HISTORICAL_EVENTS_DB[resolvedId];
+    return {
+      ...COUNTRY_HISTORICAL_EVENTS_DB[resolvedId],
+      timelineEvents,
+    };
   }
 
-  // في حال لم تكن الدولة مدرجة تفصيلاً، إنشاء ملف دقيق قياسي استناداً للرموز والعملة
+  // في حال لم تكن الدولة مدرجة تفصيلاً، إنشاء ملف دقيق قياسي استناداً للرموز والعملة والأحداث الميدانية
   return {
     countryId: resolvedId,
     nameAr: 'سجل الدولة السيادي',
@@ -4522,6 +4529,7 @@ export function getCountryHistoricalEventsData(countryId) {
     assassinations: [],
     terrorEvents: [],
     foreignEscalations: [],
+    timelineEvents,
     currencyEvolution: {
       code: 'LOCAL',
       symbol: '¤',

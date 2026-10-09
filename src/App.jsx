@@ -20,8 +20,9 @@ import UnVotingExplorer from './components/UnVotingExplorer';
 import LeadersStatementsExplorer from './components/LeadersStatementsExplorer';
 import DataIngestionPipelinesExplorer from './components/DataIngestionPipelinesExplorer';
 import CurrencyVolatilityDashboard from './components/CurrencyVolatilityDashboard';
+import BilateralAlliancesExplorer from './components/BilateralAlliancesExplorer';
 import { LeadershipProvider } from './context/LeadershipContext';
-import { Activity, FileText, Globe2, Radio, Coins, Shield, Crosshair } from 'lucide-react';
+import { Activity, FileText, Globe2, Radio, Coins, Shield, Crosshair, Clock, Target } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
@@ -33,6 +34,7 @@ export default function App() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [comparisonCountry1, setComparisonCountry1] = useState(null);
   const [comparisonCountry2, setComparisonCountry2] = useState(null);
+  const [isBilateralTreatiesModalOpen, setIsBilateralTreatiesModalOpen] = useState(false);
 
   const data = geopoliticalData[lang];
   const isAr = lang === 'ar';
@@ -110,6 +112,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenComparison={handleOpenComparison}
+        onOpenBilateralTreaties={() => setIsBilateralTreatiesModalOpen(true)}
       />
 
       <NewsTickerBar tickerItems={data.newsTicker} lang={lang} />
@@ -175,6 +178,17 @@ export default function App() {
                   <span>{isAr ? 'مصفوفة التحالفات (13 تكتل)' : 'Alliances Matrix (13)'}</span>
                 </button>
                 <button
+                  onClick={() => setActiveTab('bilateral-treaties')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'bilateral-treaties'
+                      ? 'border-amber-500 bg-amber-500/20 text-amber-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/40 hover:text-amber-300'
+                  }`}
+                >
+                  <Target className="h-3 w-3 text-amber-400" />
+                  <span>{isAr ? 'المعاهدات والبنود الثنائية' : 'Bilateral Pacts & Clauses'}</span>
+                </button>
+                <button
                   onClick={() => setActiveTab('arms')}
                   className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
                     activeTab === 'arms'
@@ -184,6 +198,17 @@ export default function App() {
                 >
                   <Crosshair className="h-3 w-3 text-rose-400" />
                   <span>{isAr ? 'صفقات السلاح SIPRI' : 'Arms Deals'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('archive')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'archive'
+                      ? 'border-sky-500 bg-sky-500/20 text-sky-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-sky-500/40 hover:text-sky-300'
+                  }`}
+                >
+                  <Clock className="h-3 w-3 text-sky-400" />
+                  <span>{isAr ? 'أرشيف المحاكاة (1914 - 2026)' : 'Chrono Archive (1914-2026)'}</span>
                 </button>
               </div>
             </div>
@@ -251,6 +276,7 @@ export default function App() {
                 onClearSelection={() => setSelectedCountryId(null)}
                 focusCountry={activeCountry}
                 selectedYear={selectedYear}
+                onYearChange={setSelectedYear}
                 onOpenComparison={handleOpenComparison}
               />
             </div>
@@ -268,6 +294,15 @@ export default function App() {
           <CurrencyVolatilityDashboard lang={lang} onSelectCountry={handleSelectCountry} />
         ) : activeTab === 'alliances' ? (
           <AllianceAnalyticsSection lang={lang} onSelectCountry={handleSelectCountry} />
+        ) : activeTab === 'bilateral-treaties' ? (
+          <BilateralAlliancesExplorer
+            lang={lang}
+            isOpen={true}
+            onClose={() => setActiveTab('map')}
+            onFocusTreatyOnMap={() => {
+              setActiveTab('map');
+            }}
+          />
         ) : activeTab === 'arms' ? (
           <ArmsDealsExplorer lang={lang} onSelectCountry={handleSelectCountry} />
         ) : activeTab === 'un-votes' ? (
@@ -295,7 +330,9 @@ export default function App() {
         ) : activeTab === 'archive' ? (
           <HistoricalArchivePanel
             lang={lang}
-            onFocusOnMap={() => {
+            onFocusOnMap={(targetYear, countryId) => {
+              if (targetYear) setSelectedYear(Number(targetYear));
+              if (countryId) setSelectedCountryId(countryId);
               setActiveTab('map');
             }}
           />
@@ -352,6 +389,16 @@ export default function App() {
           }}
         />
       )}
+
+      <BilateralAlliancesExplorer
+        lang={lang}
+        isOpen={isBilateralTreatiesModalOpen}
+        onClose={() => setIsBilateralTreatiesModalOpen(false)}
+        onFocusTreatyOnMap={(_coords) => {
+          setIsBilateralTreatiesModalOpen(false);
+          setActiveTab('map');
+        }}
+      />
       </div>
     </LeadershipProvider>
   );

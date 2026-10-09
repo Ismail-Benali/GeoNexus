@@ -605,6 +605,35 @@ export default function CountrySidePanel({
               </div>
             )}
 
+            {/* 4. سجل أحداث الدولة الميدانية التاريخية المربوطة بالمحاكاة */}
+            {historicalEventsData?.timelineEvents?.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="m-0 text-xs font-black text-sky-400 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'محطات وأحداث الدولة في الخط الزمني للمحاكاة' : 'Historical Timeline Simulation Milestones'}</span>
+                </h5>
+                <div className="space-y-2">
+                  {historicalEventsData.timelineEvents.map((item, idx) => (
+                    <div key={idx} className="rounded-xl border border-sky-500/30 bg-slate-900/60 p-2.5 space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="font-bold text-white text-[11px]">{isAr ? item.titleAr : item.titleEn}</span>
+                        <span className="font-mono text-[10px] text-sky-400 font-bold shrink-0">{item.year}</span>
+                      </div>
+                      <p className="m-0 text-[11px] text-slate-300 leading-relaxed pt-1 border-t border-slate-800/60">
+                        {isAr ? item.summaryAr : item.summaryEn}
+                      </p>
+                      {item.impactAr && (
+                        <p className="m-0 text-[10px] text-amber-300/90 pt-1">
+                          <span className="font-bold">{isAr ? 'الأثر الاستراتيجي:' : 'Impact:'} </span>
+                          <span>{isAr ? item.impactAr : item.impactEn}</span>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* زر فتح الملف السيادي الكامل */}
             {onOpenFullDossier && (
               <button

@@ -11,9 +11,11 @@ import {
   Swords,
   Globe,
   BadgeAlert,
+  Crosshair,
 } from 'lucide-react';
 import { HISTORICAL_ARCHIVE_DATA, HISTORICAL_REGIONS } from '../data/historicalArchiveData.js';
 import { COUNTRY_HISTORICAL_EVENTS_DB } from '../data/countryHistoricalEventsDB.js';
+import { TIMELINE_YEAR_EVENTS } from '../data/timelineYearEventsDB.js';
 
 export default function HistoricalArchivePanel({ lang = 'ar', onFocusOnMap }) {
   const isAr = lang === 'ar';
@@ -158,6 +160,20 @@ export default function HistoricalArchivePanel({ lang = 'ar', onFocusOnMap }) {
     );
   }, [selectedCountryKey, sovereignCategory, countryKeysList, searchQuery]);
 
+  // تصفية أحداث المحاكاة الزمنية
+  const filteredTimelineEvents = useMemo(() => {
+    if (!searchQuery.trim()) return TIMELINE_YEAR_EVENTS;
+    const q = searchQuery.toLowerCase().trim();
+    return TIMELINE_YEAR_EVENTS.filter((ev) =>
+      (ev.titleAr && ev.titleAr.toLowerCase().includes(q)) ||
+      (ev.titleEn && ev.titleEn.toLowerCase().includes(q)) ||
+      (ev.summaryAr && ev.summaryAr.toLowerCase().includes(q)) ||
+      (ev.summaryEn && ev.summaryEn.toLowerCase().includes(q)) ||
+      (ev.belligerentsAr && ev.belligerentsAr.toLowerCase().includes(q)) ||
+      String(ev.year).includes(q)
+    );
+  }, [searchQuery]);
+
   return (
     <div className="space-y-5" dir={isAr ? 'rtl' : 'ltr'}>
       {/* الترويسة القيادية للأرشيف مع أزرار التحويل */}
@@ -196,6 +212,21 @@ export default function HistoricalArchivePanel({ lang = 'ar', onFocusOnMap }) {
               >
                 <Calendar className="h-4 w-4" />
                 <span>{isAr ? 'الأرشيف الجيوسياسي' : 'Geopolitical Conflicts'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveMode('timeline')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-black transition ${
+                  activeMode === 'timeline'
+                    ? 'bg-sky-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+                <span>{isAr ? 'محاكاة الخريطة (1914 - 2026)' : 'Map Timeline (1914-2026)'}</span>
+                <span className="rounded bg-sky-950/80 border border-sky-500/40 px-1 py-0.2 text-[9px] font-mono text-sky-300">
+                  {TIMELINE_YEAR_EVENTS.length}
+                </span>
               </button>
 
               <button
@@ -341,6 +372,78 @@ export default function HistoricalArchivePanel({ lang = 'ar', onFocusOnMap }) {
             )}
           </div>
         </>
+      ) : activeMode === 'timeline' ? (
+        /* النمط الثالث: محاكاة الخريطة والأحداث الميدانية (1914 - 2026) */
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+            <div className="relative flex-1">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={isAr ? 'البحث في أحداث المحاكاة، الحروب، المعاهدات، الدول...' : 'Search simulation events, wars, treaties, nations...'}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 ps-9 pe-3 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-sky-400 font-bold">
+                {filteredTimelineEvents.length} {isAr ? 'محطة مسجلة' : 'milestones'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredTimelineEvents.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900/80 to-slate-950 p-4 space-y-3 shadow-lg hover:border-sky-500/50 transition flex flex-col justify-between"
+              >
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                    <span className="font-mono text-xs font-black px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                      {item.year}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400 uppercase font-bold">
+                      {item.category}
+                    </span>
+                  </div>
+
+                  <h4 className="m-0 text-sm font-black text-white leading-snug">
+                    {isAr ? item.titleAr : item.titleEn}
+                  </h4>
+
+                  <p className="m-0 text-xs text-slate-300 leading-relaxed">
+                    {isAr ? item.summaryAr : item.summaryEn}
+                  </p>
+
+                  {item.belligerentsAr && (
+                    <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
+                      <b className="text-slate-300">{isAr ? 'الأطراف والدول المتأثرة:' : 'Parties / Actors:'} </b>
+                      <span>{isAr ? item.belligerentsAr : item.belligerentsEn}</span>
+                    </div>
+                  )}
+
+                  {item.impactAr && (
+                    <div className="text-[11px] text-amber-300/90 bg-amber-950/20 p-2 rounded-xl border border-amber-500/20">
+                      <b className="text-amber-400">{isAr ? 'الأثر الاستراتيجي:' : 'Strategic Impact:'} </b>
+                      <span>{isAr ? item.impactAr : item.impactEn}</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => onFocusOnMap?.(item.year, item.countryId)}
+                  className="w-full mt-2 flex items-center justify-center gap-1.5 rounded-xl border border-sky-500/40 bg-sky-500/15 py-2 px-3 text-xs font-black text-sky-300 hover:bg-sky-500/25 hover:border-sky-400 transition shadow"
+                >
+                  <Crosshair className="h-4 w-4" />
+                  <span>{isAr ? `عرض على الخريطة ومحاكاة عام ${item.year}` : `Focus on Map & Simulate ${item.year}`}</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         /* النمط الثاني: سجل الأحداث السيادية والعملات لكل دولة */
         <div className="space-y-4">

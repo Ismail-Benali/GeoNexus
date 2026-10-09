@@ -9,10 +9,8 @@ import {
   Play,
   Pause,
   Clock,
-  Flame,
   CheckCircle2,
   Copy,
-  Share2,
 } from 'lucide-react';
 import { fetchIntelligenceStream, NEWS_SOURCES_META } from '../services/news.js';
 import { translateText } from '../utils/translator.js';

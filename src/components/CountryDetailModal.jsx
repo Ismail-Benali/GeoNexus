@@ -1140,6 +1140,18 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
                   <span>{isAr ? 'تصاعدات مع دول أجنبية' : 'Foreign Escalations'}</span>
                   <span className="font-mono text-[10px] opacity-80">({historicalEventsData?.foreignEscalations?.length || 0})</span>
                 </button>
+                <button
+                  onClick={() => setEventsFilter('timeline')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                    eventsFilter === 'timeline'
+                      ? 'bg-sky-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Clock className="h-3 w-3" />
+                  <span>{isAr ? 'محطات الخط الزمني' : 'Timeline Milestones'}</span>
+                  <span className="font-mono text-[10px] opacity-80">({historicalEventsData?.timelineEvents?.length || 0})</span>
+                </button>
               </div>
 
               {/* 1. قسم الاغتيالات السياسية الكبرى */}
@@ -1340,6 +1352,54 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* 4. قسم محطات الخط الزمني للمحاكاة التاريخية */}
+              {(eventsFilter === 'all' || eventsFilter === 'timeline') && historicalEventsData?.timelineEvents?.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-slate-800/80">
+                  <h3 className="m-0 text-sm font-black text-sky-400 flex items-center gap-2 border-b border-sky-500/20 pb-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{isAr ? 'محطات وأحداث الدولة في الخط الزمني للمحاكاة (1914 - 2026)' : 'State Milestones in Geopolitical Simulation Timeline'}</span>
+                  </h3>
+
+                  <div className="grid gap-3">
+                    {historicalEventsData.timelineEvents.map((milestone, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-sky-500/30 bg-slate-950/80 p-3.5 space-y-2 hover:border-sky-500/50 transition"
+                      >
+                        <div className="flex items-start justify-between gap-2.5 flex-wrap">
+                          <div className="min-w-0">
+                            <h4 className="m-0 text-xs sm:text-sm font-black text-white">
+                              {isAr ? milestone.titleAr : milestone.titleEn}
+                            </h4>
+                            {milestone.belligerentsAr && (
+                              <span className="text-[10px] text-sky-300 font-bold block mt-0.5">
+                                {isAr ? 'الأطراف والدول المتأثرة:' : 'Parties / Actors:'} {isAr ? milestone.belligerentsAr : milestone.belligerentsEn}
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-mono text-xs font-bold text-sky-300 bg-sky-950/60 border border-sky-500/30 px-2 py-0.5 rounded shrink-0">
+                            {milestone.year}
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-200 leading-relaxed">
+                          {isAr ? milestone.summaryAr : milestone.summaryEn}
+                        </div>
+
+                        {milestone.impactAr && (
+                          <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-2 text-xs text-amber-200 leading-relaxed">
+                            <span className="font-bold text-amber-400 block mb-0.5">
+                              {isAr ? 'الأثر الاستراتيجي والجيوسياسي:' : 'Strategic Impact:'}
+                            </span>
+                            {isAr ? milestone.impactAr : milestone.impactEn}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

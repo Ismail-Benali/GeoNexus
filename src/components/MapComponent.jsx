@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -24,6 +24,11 @@ import {
   Sparkles,
   Anchor,
   Zap,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
+  Target,
 } from 'lucide-react';
 import { getFlagUrl, getEmblemUrl } from '../utils/countrySymbols';
 import { useLeadership } from '../context/useLeadership';
@@ -35,6 +40,8 @@ import {
 } from '../data/tacticalMapData';
 import { translateText } from '../utils/translator';
 import { getEraForYear } from '../data/historicalTimelineEras.js';
+import { getTimelineEventsForYear, getDefconForYear } from '../data/timelineYearEventsDB.js';
+import { BILATERAL_TREATIES_DB } from '../data/bilateralTreatiesAndAlliancesDB.js';
 import CountryTrendChart from './CountryTrendChart';
 import CountrySidePanel from './CountrySidePanel';
 
@@ -228,9 +235,84 @@ function createCorridorIcon(item, lang = 'ar') {
   });
 }
 
-// متحكم الانتقال السلس إلى المسارح والدول
-function MapFocus({ country, theater }) {
+function createYearEventIcon(item, lang = 'ar') {
+  const isAr = lang === 'ar';
+  const category = item.category || 'crisis';
+  const title = isAr ? item.titleAr : item.titleEn;
+
+  const colorMap = {
+    war: '#f43f5e',
+    treaty: '#10b981',
+    revolution: '#f97316',
+    crisis: '#eab308',
+    monetary: '#06b6d4',
+    milestone: '#a855f7',
+  };
+  const color = colorMap[category] || '#f59e0b';
+
+  let svgIcon = '';
+  if (category === 'war') {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6 2 2-6-2-2-6 2"/><path d="M9.5 6.5 18 15"/></svg>`;
+  } else if (category === 'treaty') {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+  } else if (category === 'revolution') {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+  } else if (category === 'monetary') {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="m7 6 5 5"/></svg>`;
+  } else if (category === 'milestone') {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>`;
+  } else {
+    svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+  }
+
+  return L.divIcon({
+    className: 'nx-timeline-event-pin',
+    html: `
+      <div style="position: relative; width: 44px; height: 44px; display: grid; place-items: center;" title="${title} (${item.year})">
+        <span style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${color}; opacity: 0.45; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+        <div style="position: relative; width: 34px; height: 34px; border-radius: 50%; background-color: #020617; border: 2.5px solid ${color}; display: grid; place-items: center; box-shadow: 0 0 18px ${color}; z-index: 2;">
+          ${svgIcon}
+        </div>
+        <span style="position: absolute; bottom: -8px; background-color: #020617; border: 1px solid ${color}; color: #ffffff; font-size: 9px; font-weight: 800; font-family: monospace; padding: 0 4px; border-radius: 4px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 3;">
+          ${item.year}
+        </span>
+      </div>
+    `,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    popupAnchor: [0, -22],
+  });
+}
+
+function createBilateralTreatyIcon(treaty, lang = 'ar') {
+  const isAr = lang === 'ar';
+  const title = isAr ? treaty.titleAr : treaty.titleEn;
+  const color = '#f59e0b';
+
+  return L.divIcon({
+    className: 'nx-treaty-pin',
+    html: `
+      <div style="position: relative; display: flex; align-items: center; gap: 4px; background: rgba(2, 6, 23, 0.95); border: 1.5px solid ${color}; padding: 3px 7px; border-radius: 9999px; box-shadow: 0 0 16px rgba(245, 158, 11, 0.5); font-size: 11px; white-space: nowrap; cursor: pointer;" title="${title}">
+        <span>${treaty.country1.flag}</span>
+        <span style="color: ${color}; font-weight: 900; font-size: 10px;">⚔️</span>
+        <span>${treaty.country2.flag}</span>
+      </div>
+    `,
+    iconSize: [56, 24],
+    iconAnchor: [28, 12],
+    popupAnchor: [0, -14],
+  });
+}
+
+// متحكم الانتقال السلس إلى المسارح والدول وبؤر أحداث المحاكاة
+function MapFocus({ country, theater, targetCoords }) {
   const map = useMap();
+
+  useEffect(() => {
+    if (targetCoords) {
+      map.flyTo(targetCoords, Math.max(map.getZoom(), 4.8), { duration: 1.3 });
+    }
+  }, [targetCoords, map]);
 
   useEffect(() => {
     if (country?.coordinates) {
@@ -276,6 +358,7 @@ export default function MapComponent({
   onClearSelection,
   focusCountry,
   selectedYear = 2026,
+  onYearChange,
   onOpenComparison,
 }) {
   const isAr = lang === 'ar';
@@ -289,12 +372,42 @@ export default function MapComponent({
   const [showBases, setShowBases] = useState(true);
   const [showChokepoints, setShowChokepoints] = useState(true);
   const [showCorridors, setShowCorridors] = useState(true);
+  const [showTimelineEvents, setShowTimelineEvents] = useState(true);
+  const [showEraBlocs, setShowEraBlocs] = useState(true);
+  const [showBilateralTreaties, setShowBilateralTreaties] = useState(true);
+  const [autoTrackEpicenter, setAutoTrackEpicenter] = useState(true);
+  const [targetFlyCoords, setTargetFlyCoords] = useState(null);
+  const [isSimHudCollapsed, setIsSimHudCollapsed] = useState(false);
+  const [isSimPlaying, setIsSimPlaying] = useState(false);
   const [heatIntensity, setHeatIntensity] = useState('high'); // 'standard' | 'high' | 'ultra'
   const [activeTheater, setActiveTheater] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [quickSearchQuery, setQuickSearchQuery] = useState('');
 
   const currentEra = useMemo(() => getEraForYear(selectedYear), [selectedYear]);
+  const timelineEvents = useMemo(() => getTimelineEventsForYear(selectedYear), [selectedYear]);
+  const defcon = useMemo(() => getDefconForYear(selectedYear), [selectedYear]);
+
+  // تشغيل المحاكاة التلقائية المباشرة من لوحة الخريطة
+  useEffect(() => {
+    if (isSimPlaying && onYearChange) {
+      const timer = setInterval(() => {
+        onYearChange((prev) => (prev >= 2026 ? 1914 : prev + 1));
+      }, 3000);
+      return () => clearInterval(timer);
+    }
+  }, [isSimPlaying, onYearChange]);
+
+  // تتبع بؤرة الحدث الميداني تلقائياً عند تغيير السنة
+  const prevYearRef = useRef(selectedYear);
+  useEffect(() => {
+    if (prevYearRef.current !== selectedYear) {
+      prevYearRef.current = selectedYear;
+      if (autoTrackEpicenter && timelineEvents && timelineEvents.length > 0) {
+        setTargetFlyCoords(timelineEvents[0].coordinates);
+      }
+    }
+  }, [selectedYear, autoTrackEpicenter, timelineEvents]);
 
   // إحداثيات الـ HUD الحية
   const [hudCoords, setHudCoords] = useState({ lat: '22.00', lng: '12.00', zoom: 2 });
@@ -328,6 +441,16 @@ export default function MapComponent({
 
   const corridorIcons = useMemo(
     () => Object.fromEntries(ENERGY_AND_CABLE_CORRIDORS.map((cor) => [cor.id, createCorridorIcon(cor, lang)])),
+    [lang],
+  );
+
+  const yearEventIcons = useMemo(
+    () => Object.fromEntries(timelineEvents.map((ev) => [ev.id, createYearEventIcon(ev, lang)])),
+    [timelineEvents, lang],
+  );
+
+  const treatyIcons = useMemo(
+    () => Object.fromEntries(BILATERAL_TREATIES_DB.map((t) => [t.id, createBilateralTreatyIcon(t, lang)])),
     [lang],
   );
 
@@ -415,6 +538,54 @@ export default function MapComponent({
               })}
             </div>
           </div>
+
+          {/* تبديل علامات أحداث السنة المحددة من المحاكاة */}
+          <button
+            onClick={() => setShowTimelineEvents((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showTimelineEvents
+                ? 'border-sky-500/60 bg-sky-500/20 text-sky-300 shadow-sky-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? `عرض بؤر وأحداث عام ${selectedYear} على الخريطة` : `Toggle ${selectedYear} Events on Map`}
+          >
+            <Clock className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
+            <span>{isAr ? `أحداث عام ${selectedYear}` : `Events in ${selectedYear}`}</span>
+            <span className="rounded-full bg-slate-900 border border-slate-700 px-1.5 py-0.2 text-[10px] font-mono text-sky-300">
+              {timelineEvents.length}
+            </span>
+          </button>
+
+          {/* تبديل كتل وتحالفات العصر */}
+          <button
+            onClick={() => setShowEraBlocs((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showEraBlocs
+                ? 'border-indigo-500/60 bg-indigo-500/20 text-indigo-300 shadow-indigo-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? 'عرض تكتلات وتحالفات هذا العصر التاريخي' : 'Toggle Era Blocs'}
+          >
+            <Shield className="h-3.5 w-3.5 text-indigo-400" />
+            <span>{isAr ? 'تكتلات العصر' : 'Era Blocs'}</span>
+          </button>
+
+          {/* تبديل المعاهدات الثنائية والبنود الدفاعية الاستراتيجية */}
+          <button
+            onClick={() => setShowBilateralTreaties((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              showBilateralTreaties
+                ? 'border-amber-500/60 bg-amber-500/20 text-amber-300 shadow-amber-950/50'
+                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white'
+            }`}
+            title={isAr ? 'عرض روابط المعاهدات الثنائية وبنود الدفاع المشترك على الخريطة' : 'Toggle Bilateral Defense Pacts on Map'}
+          >
+            <Target className="h-3.5 w-3.5 text-amber-400" />
+            <span>{isAr ? 'المعاهدات الثنائية' : 'Bilateral Pacts'}</span>
+            <span className="rounded-full bg-slate-900 border border-slate-700 px-1.5 py-0.2 text-[10px] font-mono text-amber-300">
+              {BILATERAL_TREATIES_DB.length}
+            </span>
+          </button>
 
           {/* تبديل بؤر النزاع مع أيقونة اللهب والتعداد المباشر */}
           <button
@@ -819,6 +990,167 @@ export default function MapComponent({
               );
             })}
 
+            {/* تمييز وتأطير أعضاء الكتل والتحالفات التاريخية السائدة في هذا العصر */}
+            {showEraBlocs &&
+              currentEra.blocs &&
+              currentEra.blocs.map((bloc) =>
+                data.countries
+                  .filter((c) => bloc.members && bloc.members.includes(c.id))
+                  .map((c) => (
+                    <Circle
+                      key={`era-bloc-${bloc.id}-${c.id}`}
+                      center={c.coordinates}
+                      radius={320000}
+                      pathOptions={{
+                        stroke: true,
+                        color: bloc.color,
+                        weight: 2,
+                        dashArray: '4, 4',
+                        fillColor: bloc.color,
+                        fillOpacity: 0.15,
+                      }}
+                    />
+                  ))
+              )}
+
+            {/* علامات وأطواق محاكاة أحداث السنة المحددة المربوطة بالخريطة */}
+            {showTimelineEvents &&
+              timelineEvents.map((event) => {
+                const icon = yearEventIcons[event.id];
+                const category = event.category || 'crisis';
+                const color =
+                  category === 'war'
+                    ? '#f43f5e'
+                    : category === 'treaty'
+                    ? '#10b981'
+                    : category === 'revolution'
+                    ? '#f97316'
+                    : category === 'monetary'
+                    ? '#06b6d4'
+                    : category === 'milestone'
+                    ? '#a855f7'
+                    : '#eab308';
+                const localizedTitle = isAr ? event.titleAr : event.titleEn;
+                const localizedSummary = isAr ? event.summaryAr : event.summaryEn;
+                const localizedImpact = isAr ? event.impactAr : event.impactEn;
+                const localizedBelligerents = isAr ? event.belligerentsAr : event.belligerentsEn;
+                const country = data.countries.find((c) => c.id === event.countryId);
+
+                return (
+                  <div key={`timeline-event-${event.id}`}>
+                    {/* طوق راداري متوهج حول بؤرة الحدث الميداني */}
+                    <Circle
+                      center={event.coordinates}
+                      radius={480000}
+                      pathOptions={{
+                        stroke: true,
+                        color: color,
+                        weight: 2,
+                        dashArray: '6, 6',
+                        fillColor: color,
+                        fillOpacity: 0.2,
+                      }}
+                    />
+                    <Circle
+                      center={event.coordinates}
+                      radius={200000}
+                      pathOptions={{
+                        stroke: false,
+                        fillColor: color,
+                        fillOpacity: 0.38,
+                      }}
+                    />
+
+                    <Marker position={event.coordinates} icon={icon}>
+                      <Popup className="nx-custom-popup" maxWidth={360}>
+                        <div className="p-1 space-y-2.5 text-slate-100" dir={isAr ? 'rtl' : 'ltr'}>
+                          {/* الرأس: شارة السنة والتصنيف ومؤشر التهديد */}
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="font-mono text-xs font-black px-2 py-0.5 rounded-md text-white border"
+                                style={{ backgroundColor: `${color}30`, borderColor: `${color}80` }}
+                              >
+                                {isAr ? `عام ${event.year}` : `Year ${event.year}`}
+                              </span>
+                              <span
+                                className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                                style={{ backgroundColor: `${color}20`, color: color }}
+                              >
+                                {category === 'war'
+                                  ? (isAr ? 'صراع مسلح / حرب' : 'War / Conflict')
+                                  : category === 'treaty'
+                                  ? (isAr ? 'معاهدة / تحالف' : 'Treaty / Alliance')
+                                  : category === 'revolution'
+                                  ? (isAr ? 'ثورة / تحول حكم' : 'Revolution / Transition')
+                                  : category === 'monetary'
+                                  ? (isAr ? 'تحول نقدي / طاقة' : 'Monetary / Energy')
+                                  : category === 'milestone'
+                                  ? (isAr ? 'محطة سيادية / تأسيس' : 'Sovereign Milestone')
+                                  : (isAr ? 'أزمة استراتيجية' : 'Strategic Crisis')}
+                              </span>
+                            </div>
+                            <span className="font-mono text-[9px] text-slate-400">
+                              {event.severity === 'critical' ? 'CRITICAL' : 'HIGH PRIORITY'}
+                            </span>
+                          </div>
+
+                          {/* عنوان الحدث */}
+                          <h4 className="m-0 text-xs sm:text-sm font-black text-white leading-snug">
+                            {localizedTitle}
+                          </h4>
+
+                          {/* الملخص الاستخباري */}
+                          <p className="m-0 text-[11px] leading-relaxed text-slate-300">
+                            {localizedSummary}
+                          </p>
+
+                          {/* الأطراف المشاركة / المتحاربة والأثر الاستراتيجي */}
+                          <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-2 text-[10px] space-y-1.5">
+                            {localizedBelligerents && (
+                              <div>
+                                <span className="font-bold text-slate-400">{isAr ? 'الأطراف والدول المتأثرة:' : 'Parties / Affected:'} </span>
+                                <span className="text-slate-200">{localizedBelligerents}</span>
+                              </div>
+                            )}
+                            {localizedImpact && (
+                              <div className="pt-1 border-t border-slate-800/80">
+                                <span className="font-bold text-amber-400">{isAr ? 'الأثر الجيوسياسي:' : 'Strategic Impact:'} </span>
+                                <span className="text-slate-300">{localizedImpact}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* أزرار الإجراء السريع */}
+                          <div className="grid grid-cols-2 gap-2 pt-1">
+                            {country && (
+                              <button
+                                onClick={() => {
+                                  setClickedCountry(country);
+                                }}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-sky-500/40 bg-sky-500/20 px-2 py-1.5 text-xs font-bold text-sky-300 hover:bg-sky-500/30 transition shadow-sm"
+                              >
+                                <BookOpen className="h-3.5 w-3.5" />
+                                <span>{isAr ? 'الملف السيادي للدولة' : 'Country Dossier'}</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setTargetFlyCoords(event.coordinates);
+                              }}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 px-2 py-1.5 text-xs font-bold text-white shadow hover:from-amber-500 hover:to-rose-500 transition"
+                            >
+                              <Crosshair className="h-3.5 w-3.5" />
+                              <span>{isAr ? 'تكبير البؤرة' : 'Focus Hotspot'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  </div>
+                );
+              })}
+
             {/* علامات رصد النقاط الساخنة والحروب والتحالفات */}
             {showHotspots &&
               HOTSPOTS_DATA.map((hotspot) => {
@@ -1101,7 +1433,85 @@ export default function MapComponent({
                 );
               })}
 
-            <MapFocus country={focusCountry} theater={activeTheater} />
+            {/* شبكة خطوط المعاهدات والتحالفات الدفاعية الثنائية بين الدول (Bilateral Treaties Arcs) */}
+            {showBilateralTreaties &&
+              BILATERAL_TREATIES_DB.map((treaty) => {
+                const coords1 = treaty.coordinates1;
+                const coords2 = treaty.coordinates2;
+                if (!coords1 || !coords2) return null;
+
+                const midLat = (coords1[0] + coords2[0]) / 2;
+                const midLng = (coords1[1] + coords2[1]) / 2;
+                const icon = treatyIcons[treaty.id];
+
+                return (
+                  <div key={`bilateral-group-${treaty.id}`}>
+                    {/* خط التحالف المتوهج المربوط بين البلدين */}
+                    <Polyline
+                      positions={[coords1, coords2]}
+                      pathOptions={{
+                        color: '#f59e0b',
+                        weight: 2.5,
+                        dashArray: '6, 6',
+                        opacity: 0.85,
+                      }}
+                    />
+
+                    {/* علامة منتصف الرابط للمعاهدة مع إمكانية النقر لقراءة الغاية والبنود */}
+                    <Marker position={[midLat, midLng]} icon={icon}>
+                      <Popup className="nx-custom-popup" maxWidth={360}>
+                        <div className="p-1 space-y-2.5 text-slate-100" dir={isAr ? 'rtl' : 'ltr'}>
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                            <span className="font-mono text-[10px] font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded">
+                              {treaty.signedYear}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-300">
+                              {treaty.country1.flag} ⟷ {treaty.country2.flag}
+                            </span>
+                          </div>
+
+                          <h4 className="m-0 text-xs font-black text-white leading-tight">
+                            {isAr ? treaty.titleAr : treaty.titleEn}
+                          </h4>
+
+                          {/* ما غاية هذا التحالف؟ */}
+                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] space-y-1">
+                            <div className="font-black text-amber-300 flex items-center gap-1">
+                              <Target className="h-3 w-3" />
+                              <span>{isAr ? 'غاية هذا التحالف:' : 'Strategic Purpose:'}</span>
+                            </div>
+                            <p className="m-0 text-slate-200 leading-snug">
+                              {isAr ? treaty.strategicPurposeAr : treaty.strategicPurposeEn}
+                            </p>
+                          </div>
+
+                          {/* عينة من البنود والمواد */}
+                          <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-2 text-[10px] space-y-1">
+                            <span className="font-black text-sky-400 block">
+                              {isAr ? 'أبرز المواد والبنود الملزمة:' : 'Key Binding Articles:'}
+                            </span>
+                            {treaty.keyClauses.slice(0, 2).map((c, i) => (
+                              <div key={i} className="text-slate-300 ps-1 border-s border-indigo-500/40">
+                                <span className="font-bold text-amber-300">{c.articleNumber}: </span>
+                                <span>{isAr ? c.titleAr : c.titleEn}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {treaty.sharedArsenal && (
+                            <div className="text-[10px] text-slate-400">
+                              <span className="font-bold text-slate-300">{isAr ? 'الترسانة المشتركة: ' : 'Arsenal: '}</span>
+                              <span className="text-amber-400 font-mono">{treaty.sharedArsenal.slice(0, 3).join(', ')}</span>
+                            </div>
+                          )}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  </div>
+                );
+              })}
+
+            <MapFocus country={focusCountry} theater={activeTheater} targetCoords={targetFlyCoords} />
             <MapHudWatcher onUpdate={setHudCoords} />
           </MapContainer>
 
@@ -1152,21 +1562,130 @@ export default function MapComponent({
             </div>
           )}
 
-          {/* شارة محاكاة العصر التاريخي عند تغيير مؤشر الخط الزمني */}
-          {selectedYear !== 2026 && (
-            <div className="pointer-events-none absolute top-3 start-3 z-[500] max-w-sm rounded-xl border border-sky-500/40 bg-slate-950/95 p-2.5 shadow-2xl backdrop-blur text-xs space-y-1">
-              <div className="flex items-center gap-1.5 text-sky-400 font-bold text-[11px]">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{isAr ? `محاكاة تاريخية: سنة ${selectedYear}` : `Historical Simulation: ${selectedYear}`}</span>
+          {/* المرصد التكتيكي للمحاكاة والتحكم الزمني المباشر على الخريطة */}
+          <div className="absolute top-3 start-3 z-[600] w-[310px] sm:w-[360px] rounded-2xl border border-sky-500/40 bg-slate-950/95 p-3 shadow-2xl backdrop-blur text-xs space-y-2.5 transition-all">
+            {/* الرأس: السنة ومؤشر التأهب والتصغير */}
+            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                </div>
+                <div className="font-mono text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-300">
+                  {selectedYear}
+                </div>
+                <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${defcon.bg}`}>
+                  <span>{defcon.level === 1 ? 'DEFCON 1' : defcon.level === 2 ? 'DEFCON 2' : defcon.level === 3 ? 'DEFCON 3' : 'DEFCON 4'}</span>
+                </span>
               </div>
-              <p className="m-0 text-white font-bold text-[11px]">
-                {isAr ? currentEra.titleAr : currentEra.titleEn}
-              </p>
-              <p className="m-0 text-[10px] text-slate-400">
-                {isAr ? currentEra.orderAr : currentEra.orderEn}
-              </p>
+
+              {/* أزرار التحكم بالمحاكاة والتصغير */}
+              <div className="flex items-center gap-1">
+                {onYearChange && (
+                  <>
+                    <button
+                      onClick={() => onYearChange((y) => Math.max(1914, y - 1))}
+                      className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                      title={isAr ? 'سنة سابقة (-1)' : 'Prev Year'}
+                    >
+                      {isAr ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => setIsSimPlaying((p) => !p)}
+                      className={`p-1 rounded-md transition ${
+                        isSimPlaying
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'text-sky-400 hover:bg-slate-800'
+                      }`}
+                      title={isSimPlaying ? (isAr ? 'إيقاف مؤقت' : 'Pause') : (isAr ? 'تشغيل المحاكاة' : 'Play')}
+                    >
+                      {isSimPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => onYearChange((y) => Math.min(2026, y + 1))}
+                      className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                      title={isAr ? 'سنة تالية (+1)' : 'Next Year'}
+                    >
+                      {isAr ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setIsSimHudCollapsed((c) => !c)}
+                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  title={isSimHudCollapsed ? (isAr ? 'توسيع اللوحة' : 'Expand') : (isAr ? 'تصغير' : 'Collapse')}
+                >
+                  {isSimHudCollapsed ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
+                </button>
+              </div>
             </div>
-          )}
+
+            {!isSimHudCollapsed && (
+              <>
+                <div className="space-y-0.5">
+                  <h4 className="m-0 text-xs font-black text-white">
+                    {isAr ? currentEra.titleAr : currentEra.titleEn}
+                  </h4>
+                  <p className="m-0 text-[10px] text-slate-400 leading-tight">
+                    {isAr ? currentEra.orderAr : currentEra.orderEn}
+                  </p>
+                </div>
+
+                {/* قائمة أحداث هذه السنة المربوطة بالخريطة مع إمكانية القفز السريع */}
+                <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                    <span className="flex items-center gap-1 text-sky-400">
+                      <Crosshair className="h-3 w-3" />
+                      <span>{isAr ? 'الأحداث المعروضة بالخريطة:' : 'Events on Map:'}</span>
+                    </span>
+                    <span className="font-mono text-white">
+                      {timelineEvents.length} {isAr ? 'أحداث' : 'events'}
+                    </span>
+                  </div>
+
+                  <div className="max-h-32 overflow-y-auto space-y-1 pe-0.5">
+                    {timelineEvents.map((ev) => (
+                      <button
+                        key={ev.id}
+                        onClick={() => {
+                          setTargetFlyCoords(ev.coordinates);
+                        }}
+                        className="w-full text-start flex items-center justify-between gap-1.5 p-1.5 rounded-lg border border-slate-800/80 bg-slate-900/80 hover:border-sky-500/50 hover:bg-slate-800/80 transition group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="block font-bold text-[11px] text-slate-200 group-hover:text-sky-300 truncate">
+                            {isAr ? ev.titleAr : ev.titleEn}
+                          </span>
+                          <span className="block text-[9px] text-slate-400 truncate">
+                            {isAr ? ev.belligerentsAr : ev.belligerentsEn}
+                          </span>
+                        </div>
+                        <span className="shrink-0 font-mono text-[9px] text-sky-400 border border-sky-500/30 rounded px-1.5 py-0.5">
+                          {isAr ? 'تركيز' : 'Focus'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* تبديل وضع التتبع التلقائي للبؤرة أثناء المحاكاة */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px]">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 select-none">
+                    <input
+                      type="checkbox"
+                      checked={autoTrackEpicenter}
+                      onChange={(e) => setAutoTrackEpicenter(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0"
+                    />
+                    <span>{isAr ? 'تتبع تلقائي لمسرح الحدث' : 'Auto-pan to epicenter'}</span>
+                  </label>
+                  <span className="font-mono text-slate-500 text-[9px]">
+                    [CHRONO-SIM]
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* شارة الخريطة النظيفة بدون علامة مائية */}
           <div className="pointer-events-none absolute bottom-3 start-3 z-[500] flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/90 px-3 py-1.5 text-[11px] text-slate-300 backdrop-blur shadow-md">
