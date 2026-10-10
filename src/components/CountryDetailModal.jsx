@@ -27,8 +27,13 @@ import {
   AlertOctagon,
   BadgeAlert,
   Clock,
+  Eye,
+  Radio,
 } from 'lucide-react';
 import { CountryEmblem, MilitaryInsigniaBadge } from './CountrySymbols';
+import MilitaryInsigniaGallery from './MilitaryInsigniaGallery.jsx';
+import CountryIntelligenceDossier from './CountryIntelligenceDossier.jsx';
+import CountryMediaIntelligenceHub from './CountryMediaIntelligenceHub.jsx';
 import { getFlagUrl } from '../utils/countrySymbols';
 import { fetchCountryStats, formatStat } from '../services/worldbank.js';
 import { translateText } from '../utils/translator';
@@ -47,6 +52,9 @@ import CountryAlliancesSidePanel from './CountryAlliancesSidePanel.jsx';
 const TABS = [
   { id: 'overview', icon: Landmark, labelAr: 'النبذة والسيادة', labelEn: 'Overview' },
   { id: 'military', icon: Shield, labelAr: 'الجيش والعتاد والتسليح', labelEn: 'Military & Arsenal' },
+  { id: 'intel_dossier', icon: Eye, labelAr: 'الملف الاستخباري السري', labelEn: 'Intelligence Dossier' },
+  { id: 'heraldry', icon: Award, labelAr: 'الشارات والأوسمة العسكرية', labelEn: 'Military Insignias' },
+  { id: 'media_intel', icon: Radio, labelAr: 'الرصد الإعلامي والاستخباري', labelEn: 'Media & OSINT Radar' },
   { id: 'companies', icon: Building2, labelAr: 'الشركات والاستثمارات', labelEn: 'Companies' },
   { id: 'diplomacy', icon: Network, labelAr: 'الدبلوماسية والتوترات', labelEn: 'Diplomacy & Tensions' },
   { id: 'intel', icon: Radar, labelAr: 'أجهزة المخابرات', labelEn: 'Intelligence' },
@@ -212,6 +220,16 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
               >
                 <CountryEmblem country={country} className="h-full w-full" />
               </div>
+
+              {/* الشارة العسكرية الرسمية (Military Insignia) */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('heraldry')}
+                className="relative hidden sm:grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-2xl border border-sky-500/35 bg-gradient-to-b from-sky-500/15 via-slate-900/90 to-slate-950 p-1.5 shadow-lg backdrop-blur hover:border-sky-400 hover:scale-105 transition cursor-pointer"
+                title={isAr ? `شارة القوات المسلحة لـ ${localizedCountryName} (انقر لعرض الأوسمة والشارات)` : `Military Insignia of ${localizedCountryName} (Click to view full heraldry)`}
+              >
+                <MilitaryInsigniaBadge country={country} className="h-full w-full" />
+              </button>
 
               {/* الراية والاسم والعاصمة والقيادة */}
               <div className="min-w-0">
@@ -475,7 +493,7 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
           {activeTab === 'military' && (
             <div className="space-y-3.5">
               {/* شارة القوات المسلحة وسلاح الجو */}
-              <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-950/40 via-slate-900/80 to-slate-950">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-950/40 via-slate-900/80 to-slate-950">
                 <div className="flex items-center gap-3">
                   <MilitaryInsigniaBadge country={country} className="h-14 w-14" />
                   <div>
@@ -488,10 +506,23 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
                   </div>
                 </div>
 
-                <div className="text-end">
-                  <span className="text-[10px] font-mono text-amber-400 border border-amber-500/30 bg-amber-950/40 px-2.5 py-1 rounded-md font-bold block">
-                    {militaryArsenal?.insignia?.symbolText || 'SOVEREIGN DEFENSE'}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('heraldry')}
+                    className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-300 hover:bg-amber-500/25 transition cursor-pointer"
+                  >
+                    <Award className="h-3.5 w-3.5" />
+                    <span>{isAr ? 'عرض الشارات والأوسمة كاملة' : 'View All Insignias'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('intel_dossier')}
+                    className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/15 px-2.5 py-1 text-xs font-bold text-rose-300 hover:bg-rose-500/25 transition cursor-pointer"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>{isAr ? 'الملف الاستخباري' : 'Dossier'}</span>
+                  </button>
                 </div>
               </div>
 
@@ -706,6 +737,21 @@ export default function CountryDetailModal({ country, lang = 'ar', onClose, onOp
                 </Card>
               )}
             </div>
+          )}
+
+          {/* تبويب الملف الاستخباري السري السيادي */}
+          {activeTab === 'intel_dossier' && (
+            <CountryIntelligenceDossier country={country} lang={lang} />
+          )}
+
+          {/* تبويب الشارات والأوسمة العسكرية الرسمية الموثقة من ويكيبيديا والمواقع الرسمية */}
+          {activeTab === 'heraldry' && (
+            <MilitaryInsigniaGallery country={country} lang={lang} />
+          )}
+
+          {/* تبويب الرصد وجمع المعلومات من القنوات الإعلامية الرسمية */}
+          {activeTab === 'media_intel' && (
+            <CountryMediaIntelligenceHub country={country} lang={lang} />
           )}
 
           {/* 3. تبويب الشركات الكبرى (العالمية والمحلية) */}

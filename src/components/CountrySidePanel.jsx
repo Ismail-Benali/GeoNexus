@@ -24,7 +24,7 @@ import {
   Copy,
   Sparkles,
 } from 'lucide-react';
-import { CountryFlag, CountryEmblem } from './CountrySymbols';
+import { CountryFlag, CountryEmblem, MilitaryInsigniaBadge } from './CountrySymbols';
 import { useLeadership } from '../context/useLeadership';
 import {
   getPoliticalSummary,
@@ -128,6 +128,16 @@ export default function CountrySidePanel({
             >
               <CountryEmblem country={country} className="h-full w-full" />
             </div>
+
+            {/* الشارة العسكرية الرسمية الموثقة */}
+            <button
+              type="button"
+              onClick={onOpenFullDossier}
+              className="relative hidden sm:grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-sky-500/35 bg-gradient-to-b from-sky-500/10 via-slate-900 to-slate-950 p-1.5 shadow-md hover:border-sky-400 transition cursor-pointer"
+              title={isAr ? `شارة القوات المسلحة لـ ${countryName} (انقر لفتح الملف الاستخباري)` : `Military Insignia of ${countryName} (Click to open full dossier)`}
+            >
+              <MilitaryInsigniaBadge country={country} className="h-full w-full" />
+            </button>
 
             {/* راية الدولة والاسم والعاصمة */}
             <div className="min-w-0 leading-tight">

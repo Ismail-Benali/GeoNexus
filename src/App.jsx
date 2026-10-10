@@ -21,8 +21,10 @@ import LeadersStatementsExplorer from './components/LeadersStatementsExplorer';
 import DataIngestionPipelinesExplorer from './components/DataIngestionPipelinesExplorer';
 import CurrencyVolatilityDashboard from './components/CurrencyVolatilityDashboard';
 import BilateralAlliancesExplorer from './components/BilateralAlliancesExplorer';
+import GlobalMilitaryHeraldryExplorer from './components/GlobalMilitaryHeraldryExplorer';
+import GlobalMediaIntelligenceExplorer from './components/GlobalMediaIntelligenceExplorer';
 import { LeadershipProvider } from './context/LeadershipContext';
-import { Activity, FileText, Globe2, Radio, Coins, Shield, Crosshair, Clock, Target } from 'lucide-react';
+import { Activity, FileText, Globe2, Radio, Coins, Shield, Crosshair, Clock, Target, Award, Tv } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState('ar');
@@ -156,6 +158,28 @@ export default function App() {
                   {isAr ? 'المسارات الاستخباراتية:' : 'Quick Navigation:'}
                 </span>
                 <button
+                  onClick={() => setActiveTab('military-heraldry')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'military-heraldry'
+                      ? 'border-amber-500 bg-amber-500/20 text-amber-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/40 hover:text-amber-300'
+                  }`}
+                >
+                  <Award className="h-3 w-3 text-amber-400" />
+                  <span>{isAr ? 'الشارات والملفات السرية' : 'Heraldry & Dossiers'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('media-monitor')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'media-monitor'
+                      ? 'border-sky-500 bg-sky-500/20 text-sky-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-sky-500/40 hover:text-sky-300'
+                  }`}
+                >
+                  <Tv className="h-3 w-3 text-sky-400" />
+                  <span>{isAr ? 'رصد القنوات الرسمية' : 'Media OSINT'}</span>
+                </button>
+                <button
                   onClick={() => setActiveTab('currency')}
                   className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
                     activeTab === 'currency'
@@ -198,6 +222,28 @@ export default function App() {
                 >
                   <Crosshair className="h-3 w-3 text-rose-400" />
                   <span>{isAr ? 'صفقات السلاح SIPRI' : 'Arms Deals'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('military-heraldry')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'military-heraldry'
+                      ? 'border-amber-500 bg-amber-500/20 text-amber-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/40 hover:text-amber-300'
+                  }`}
+                >
+                  <Award className="h-3 w-3 text-amber-400" />
+                  <span>{isAr ? 'شارات الجيوش من ويكيبيديا' : 'Military Insignias & Wiki'}</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('media-monitor')}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                    activeTab === 'media-monitor'
+                      ? 'border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-cyan-500/40 hover:text-cyan-300'
+                  }`}
+                >
+                  <Tv className="h-3 w-3 text-cyan-400" />
+                  <span>{isAr ? 'رصد القنوات والإعلام السيادي' : 'State Media Intelligence'}</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('archive')}
@@ -290,6 +336,20 @@ export default function App() {
               />
             </div>
           </div>
+        ) : activeTab === 'military-heraldry' ? (
+          <GlobalMilitaryHeraldryExplorer
+            lang={lang}
+            onSelectCountry={(country) => {
+              handleSelectCountry(country);
+            }}
+          />
+        ) : activeTab === 'media-monitor' ? (
+          <GlobalMediaIntelligenceExplorer
+            lang={lang}
+            onSelectCountry={(country) => {
+              handleSelectCountry(country);
+            }}
+          />
         ) : activeTab === 'currency' ? (
           <CurrencyVolatilityDashboard lang={lang} onSelectCountry={handleSelectCountry} />
         ) : activeTab === 'alliances' ? (

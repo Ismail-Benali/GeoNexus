@@ -15,6 +15,8 @@ import {
   Database,
   Coins,
   Target,
+  Award,
+  Tv,
 } from 'lucide-react';
 
 export default function Navbar({
@@ -30,15 +32,17 @@ export default function Navbar({
 
   const tabs = [
     { id: 'map', label: isAr ? 'الخريطة الحية' : 'Live Map', icon: Globe },
+    { id: 'military-heraldry', label: isAr ? 'الشارات والملفات السرية' : 'Heraldry & Dossiers', icon: Award, badge: 'NEW' },
+    { id: 'media-monitor', label: isAr ? 'رصد القنوات الرسمية' : 'Media OSINT', icon: Tv, badge: 'LIVE' },
     { id: 'alliances', label: isAr ? 'التحالفات والتكتلات' : 'Alliances Matrix', icon: Shield, badge: '13' },
-    { id: 'bilateral-treaties', label: isAr ? 'المعاهدات والبنود الثنائية' : 'Bilateral Pacts & Clauses', icon: Target, badge: 'NEW' },
+    { id: 'bilateral-treaties', label: isAr ? 'المعاهدات والبنود الثنائية' : 'Bilateral Pacts & Clauses', icon: Target, badge: 'PACT' },
     { id: 'currency', label: isAr ? 'تقلبات العملات (10 سنوات)' : 'Currency 10Y FX', icon: Coins, badge: 'FX' },
     { id: 'arms', label: isAr ? 'صفقات السلاح (SIPRI)' : 'Arms Deals', icon: Crosshair, badge: 'SIPRI' },
     { id: 'un-votes', label: isAr ? 'تصويت الأمم المتحدة' : 'UN Voting Matrix', icon: Vote, badge: 'UN' },
     { id: 'statements', label: isAr ? 'عقائد وقادة' : 'Leaders Doctrines', icon: Crown },
     { id: 'hotspots', label: isAr ? 'بؤر النزاع والحروب' : 'Hotspots & Wars', icon: Flame },
-    { id: 'osint', label: isAr ? 'رادار OSINT' : 'OSINT Radar', icon: Radar, badge: 'LIVE' },
-    { id: 'stream', label: isAr ? 'البث المباشر' : 'Live Stream', icon: Radio, badge: 'LIVE' },
+    { id: 'osint', label: isAr ? 'رادار OSINT' : 'OSINT Radar', icon: Radar, badge: 'RADAR' },
+    { id: 'stream', label: isAr ? 'البث المباشر' : 'Live Stream', icon: Radio, badge: 'WIRE' },
     { id: 'archive', label: isAr ? 'الأرشيف التاريخي' : 'Historical Archive', icon: Clock },
     { id: 'pipelines', label: isAr ? 'خطوط البيانات' : 'Data Pipelines', icon: Database, badge: 'SYNC' },
     { id: 'analytics', label: isAr ? 'التحليلات المقارنة' : 'Analytics', icon: BarChart3 },
